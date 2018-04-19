@@ -37,4 +37,4 @@ import:
   
   # gorm code generator
   - package: github.com/infobloxopen/protoc-gen-gorm
-    version: v0.1.0
+    version: v0.2.0
