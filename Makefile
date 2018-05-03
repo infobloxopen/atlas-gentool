@@ -1,5 +1,5 @@
 # Utility docker image to generate Go files from .proto definition.
-# https://github.com/infobloxcto/atlas-gentool
+# https://github.com/infobloxopen/atlas-gentool
 IMAGE_NAME := infoblox/atlas-gentool:latest
 
 .PHONY: all
