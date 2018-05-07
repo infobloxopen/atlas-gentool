@@ -13,4 +13,4 @@ latest:
 .PHONY: clean
 clean:
 	docker rmi -f $(IMAGE_NAME)
-
+	docker rmi `docker images --filter "label=intermediate=true" -q`
