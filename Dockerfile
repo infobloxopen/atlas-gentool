@@ -12,14 +12,14 @@ ENV CGO_ENABLED=0
 RUN apk update \
     && apk add --no-cache --purge unzip curl git build-base automake autoconf libtool ucl-dev zlib-dev
 
-# The version and the binaries checksum for the protocol buffers compiler.
-ENV PROTOC_VERSION 3.0.0
-ENV GRPC_VERSION=1.8.3 \
-    PROTOBUF_VERSION=3.5.1 \
-    OUTDIR=/out
+# The versions for the protocol buffers compiler and grpc.
+ENV PROTOC_VERSION 3.5.1
+ENV GRPC_VERSION=1.8.3
 
+# Download and build of the protobuffer compiler and grpc
+# This and compression behavior adapted from github.com/znly/docker-protobuf
 RUN mkdir -p /protobuf && \
-    curl -L https://github.com/google/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz | tar xvz --strip-components=1 -C /protobuf
+    curl -L https://github.com/google/protobuf/archive/v${PROTOC_VERSION}.tar.gz | tar xvz --strip-components=1 -C /protobuf
 RUN git clone --depth 1 --recursive -b v${GRPC_VERSION} https://github.com/grpc/grpc.git /grpc && \
     rm -rf grpc/third_party/protobuf && \
     ln -s /protobuf /grpc/third_party/protobuf
@@ -35,13 +35,6 @@ RUN cd /grpc && \
     make install-plugins prefix=/out/usr
 RUN find /out -name "*.a" -delete -or -name "*.la" -delete
 
-
-# Download and install the protocol buffers compiler.
-#RUN curl -fsSL ${PROTOC_DOWNLOAD_URL} -o protoc.zip \
-#    && echo "${PROTOC_DOWNLOAD_SHA256}  protoc.zip" | sha256sum -c - \
-#    && mkdir -p /out/usr \
-#    && unzip -d /out/usr protoc.zip \
-#    && rm -rf protoc.zip
 
 # The version and the binaries checksum for the glide package manager.
 ENV GLIDE_VERSION 0.12.3
