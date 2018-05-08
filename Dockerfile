@@ -1,27 +1,40 @@
 # The docker image to generate Golang code from Protol Buffer.
-FROM golang:1.9.2
+FROM golang:1.9.2-alpine as builder
+LABEL intermediate=true
 MAINTAINER DL NGP-App-Infra-API <ngp-app-infra-api@infoblox.com>
 
-WORKDIR /tmp
+
 
 # Set up mandatory Go environmental variables.
 ENV CGO_ENABLED=0
 
 # Install zip tool to unpack the protoc compiler.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends unzip \
-    && apt-get clean
+RUN apk update \
+    && apk add --no-cache --purge unzip curl git build-base automake autoconf libtool ucl-dev zlib-dev
 
-# The version and the binaries checksum for the protocol buffers compiler.
-ENV PROTOC_VERSION 3.0.0
-ENV PROTOC_DOWNLOAD_URL https://github.com/google/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip
-ENV PROTOC_DOWNLOAD_SHA256 56e3f685ffe3c9516c5ed1da0aefd3f41010a051e8b36f1b538ac23298fccb30
+# The versions for the protocol buffers compiler and grpc.
+ENV PROTOC_VERSION 3.5.1
+ENV GRPC_VERSION=1.8.3
 
-# Download and install the protocol buffers compiler.
-RUN curl -fsSL ${PROTOC_DOWNLOAD_URL} -o protoc.zip \
-    && echo "${PROTOC_DOWNLOAD_SHA256} protoc.zip" | sha256sum -c - \
-    && unzip -d /usr/local protoc.zip \
-    && rm -rf protoc.zip
+# Download and build of the protobuffer compiler and grpc
+# This and compression behavior adapted from github.com/znly/docker-protobuf
+RUN mkdir -p /protobuf && \
+    curl -L https://github.com/google/protobuf/archive/v${PROTOC_VERSION}.tar.gz | tar xvz --strip-components=1 -C /protobuf
+RUN git clone --depth 1 --recursive -b v${GRPC_VERSION} https://github.com/grpc/grpc.git /grpc && \
+    rm -rf grpc/third_party/protobuf && \
+    ln -s /protobuf /grpc/third_party/protobuf
+RUN cd /protobuf && \
+    autoreconf -f -i -Wall,no-obsolete && \
+    ./configure --prefix=/usr --enable-static=no && \
+    make -j2 && make install
+RUN cd /grpc && \
+    make -j2 plugins
+RUN cd /protobuf && \
+    make install DESTDIR=/out
+RUN cd /grpc && \
+    make install-plugins prefix=/out/usr
+RUN find /out -name "*.a" -delete -or -name "*.la" -delete
+
 
 # The version and the binaries checksum for the glide package manager.
 ENV GLIDE_VERSION 0.12.3
@@ -30,7 +43,7 @@ ENV GLIDE_DOWNLOAD_SHA256 0e2be5e863464610ebc420443ccfab15cdfdf1c4ab63b5eb25d121
 
 # Download and install the glide package manager.
 RUN curl -fsSL ${GLIDE_DOWNLOAD_URL} -o glide.tar.gz \
-    && echo "${GLIDE_DOWNLOAD_SHA256} glide.tar.gz" | sha256sum -c - \
+    && echo "${GLIDE_DOWNLOAD_SHA256}  glide.tar.gz" | sha256sum -c - \
     && tar -xzf glide.tar.gz --strip-components=1 -C /usr/local/bin \
     && rm -rf glide.tar.gz
 
@@ -57,12 +70,38 @@ RUN glide up --skip-test \
     && go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators \
     && go install github.com/pseudomuto/protoc-gen-doc/cmd/... \
     && go install github.com/infobloxopen/protoc-gen-gorm \
-    && rm -rf vendor/* ${GOPATH}/pkg/*
+    && rm -rf vendor/* ${GOPATH}/pkg/* \
+    && install -c ${GOPATH}/bin/protoc-gen* /out/usr/bin/
 
-WORKDIR ${GOPATH}/src
+RUN mkdir -p /out/protos && \
+    find ${GOPATH}/src -name "*.proto" -exec cp --parents {} /out/protos \;
+
+RUN git clone --depth 1 --recursive https://github.com/upx/upx.git /upx
+RUN cd /upx/src && \
+    make -j2 upx.out CHECK_WHITESPACE=
+RUN /upx/src/upx.out --lzma -o /usr/bin/upx /upx/src/upx.out
+
+RUN upx --lzma \
+        /out/usr/bin/protoc \
+        /out/usr/bin/grpc_* \
+        /out/usr/bin/protoc-gen-*
+
+
+
+FROM alpine:3.6
+RUN apk add --no-cache libstdc++
+COPY --from=builder /out/usr /usr
+COPY --from=builder /out/protos /
+
+WORKDIR /go/src
+
+RUN mkdir -p google/protobuf && \
+  for f in any duration empty struct timestamp wrappers; do \
+    cp /go/src/github.com/golang/protobuf/ptypes/${f}/${f}.proto /go/src/google/protobuf; \
+  done
 
 # protoc as an entry point for all plugins with import paths set
-ENTRYPOINT ["protoc", "-I/usr/local/include", "-I.", \
+ENTRYPOINT ["protoc", "-I.", \
     # required import paths for protoc-gen-grpc-gateway plugin
     "-Igithub.com/grpc-ecosystem/grpc-gateway/third_party/googleapis", \
     # required import paths for protoc-gen-swagger plugin

@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package test;
+
+import "google/api/annotations.proto";
+import "github.com/lyft/protoc-gen-validate/validate/validate.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "github.com/infobloxopen/protoc-gen-gorm/options/gorm.proto";
+
+message Example {
+  option (gorm.opts).ormable = true;
+  string email_address = 1 [(validate.rules).string.email = true];
+}
+
+service ExampleService {
+    rpc Something (Example) returns (Example) {
+        option (google.api.http) = {
+            get: "/example"
+        };
+    }
+}
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info: {
+    title: "Example";
+    version: "1.0";
+    contact: {
+      name: "John Belamaric";
+      url: "https://github.com/infobloxopen/atlas-contacts-app";
+      email: "jbelamaric@infoblox.com";
+    };
+  };
+  schemes: HTTP;
+  schemes: HTTPS;
+  consumes: "application/json";
+  produces: "application/json";
+};
