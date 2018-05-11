@@ -37,8 +37,8 @@ import:
   
   # gorm code generator
   - package: github.com/infobloxopen/protoc-gen-gorm
-    version: v0.2.1
+    version: v0.4.0
   
   # atlas application toolkit
   - package: github.com/infobloxopen/atlas-app-toolkit
-    version: v0.3.0
+    version: v0.4.0
