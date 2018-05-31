@@ -45,4 +45,3 @@ import:
     version: v1.9.1
 
   - package: github.com/jinzhu/inflection
-    
