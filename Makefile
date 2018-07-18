@@ -6,6 +6,9 @@ GO_PATH              	:= /go
 SRCROOT_ON_HOST      	:= $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 SRCROOT_IN_CONTAINER	:= $(GO_PATH)/src/github.com/infobloxopen/atlas-gentool
 
+PGGVersion ?= $(shell cat ProtocGenGorm.version)
+AATVersion ?= $(shell cat AtlasAppToolkit.version)
+
 .PHONY: all
 all: latest
 
@@ -13,6 +16,10 @@ all: latest
 .PHONY: latest
 latest:
 	docker build -f Dockerfile -t $(IMAGE_NAME) .
+
+.PHONY: versioned
+versioned:
+	docker build -f Dockerfile --build-arg PGG_VERSION=$(PGGVersion) --build-arg AAT_VERSION=$(AATVersion) -t $(IMAGE_NAME) .
 
 .PHONY: clean
 clean:

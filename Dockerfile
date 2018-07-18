@@ -2,8 +2,8 @@
 FROM golang:1.9.2-alpine as builder
 LABEL intermediate=true
 MAINTAINER DL NGP-App-Infra-API <ngp-app-infra-api@infoblox.com>
-
-
+ARG PGG_VERSION=master
+ARG AAT_VERSION=master
 
 # Set up mandatory Go environmental variables.
 ENV CGO_ENABLED=0
@@ -53,7 +53,8 @@ COPY glide.yaml .
 # Compile binaries for the protocol buffer plugins. We need specific
 # versions of these tools, this is why we at first step install glide,
 # download required versions and then installing them.
-RUN glide up --skip-test \
+RUN sed -i -e "s/@PGGVersion/$PGG_VERSION/" -e "s/@AATVersion/$AATVersion/" glide.yaml; \
+    glide up --skip-test \
     && cp -r vendor/* ${GOPATH}/src/ \
     && go install github.com/golang/protobuf/protoc-gen-go \
     && go install github.com/gogo/protobuf/protoc-gen-combo \
@@ -69,7 +70,9 @@ RUN glide up --skip-test \
     && go install github.com/lyft/protoc-gen-validate \
     && go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators \
     && go install github.com/pseudomuto/protoc-gen-doc/cmd/... \
-    && go install github.com/infobloxopen/protoc-gen-gorm \
+    && go install  \
+      -ldflags "-X github.com/infobloxopen/protoc-gen-gorm/plugin.ProtocGenGormVersion=$PGG_VERSION -X github.com/infobloxopen/protoc-gen-gorm/plugin.AtlasAppToolkitVersion=$AAT_VERSION" \
+      github.com/infobloxopen/protoc-gen-gorm \
     && rm -rf vendor/* ${GOPATH}/pkg/* \
     && install -c ${GOPATH}/bin/protoc-gen* /out/usr/bin/
 
