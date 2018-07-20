@@ -1,10 +1,11 @@
 # Utility docker image to generate Go files from .proto definition.
 # https://github.com/infobloxopen/atlas-gentool
-IMAGE_NAME := infoblox/atlas-gentool:latest
+IMAGE_NAME := infoblox/atlas-gentool
 
 GO_PATH              	:= /go
 SRCROOT_ON_HOST      	:= $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
-SRCROOT_IN_CONTAINER	:= $(GO_PATH)/src/github.com/infobloxopen/atlas-gentool
+SRCROOT_IN_CONTAINER  := $(GO_PATH)/src/github.com/infobloxopen/atlas-gentool
+IMAGE_VERSION	        ?= $(shell git describe --tags --dirty=-unsupported --always)
 
 PGGVersion ?= $(shell cat ProtocGenGorm.version)
 AATVersion ?= $(shell cat AtlasAppToolkit.version)
@@ -15,11 +16,11 @@ all: latest
 # Create the Docker image with the latest tag.
 .PHONY: latest
 latest:
-	docker build -f Dockerfile -t $(IMAGE_NAME) .
+	docker build -f Dockerfile -t $(IMAGE_NAME):latest .
 
 .PHONY: versioned
 versioned:
-	docker build -f Dockerfile --build-arg PGG_VERSION=$(PGGVersion) --build-arg AAT_VERSION=$(AATVersion) -t $(IMAGE_NAME) .
+	docker build -f Dockerfile --build-arg PGG_VERSION=$(PGGVersion) --build-arg AAT_VERSION=$(AATVersion) -t $(IMAGE_NAME):$(IMAGE_VERSION) .
 
 .PHONY: clean
 clean:
@@ -48,3 +49,7 @@ test-check:
 test-clean:
 	rm -f testdata/*.go
 	rm -f testdata/*.json
+
+.PHONY: version
+version:
+	@echo $(IMAGE_VERSION)
