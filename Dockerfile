@@ -103,7 +103,8 @@ WORKDIR /go/src
 RUN mkdir -p google/protobuf && \
   for f in any duration empty struct timestamp wrappers; do \
     cp /go/src/github.com/golang/protobuf/ptypes/${f}/${f}.proto /go/src/google/protobuf; \
-  done
+  done; \
+  cp /go/src/github.com/google/protobuf/src/google/protobuf/field_mask.proto /go/src/google/protobuf;
 
 # protoc as an entry point for all plugins with import paths set
 ENTRYPOINT ["protoc", "-I.", \

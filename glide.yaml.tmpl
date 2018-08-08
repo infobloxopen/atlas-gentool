@@ -1,16 +1,19 @@
 import:
   # standard proto code generator
   - package: github.com/golang/protobuf
-    #version: v1.0.0
+    version: v1.0.0
 
   # alternative proto code generator
   - package: github.com/gogo/protobuf
-    #version: v1.0.0
+    version: v1.0.0
+
+  # field_mask source
+  - package: github.com/google/protobuf
 
   # HTTP-gRPC reverse-proxy code generator
   - package: github.com/grpc-ecosystem/grpc-gateway
     repo:    https://github.com/infobloxopen/grpc-gateway.git
-    #version: v1.3.1
+    version: atlas-patch
 
   # grpc-gateway dependency
   - package: github.com/golang/glog
