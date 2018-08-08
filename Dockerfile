@@ -50,12 +50,15 @@ RUN curl -fsSL ${GLIDE_DOWNLOAD_URL} -o glide.tar.gz \
 # Install as the protoc plugins as build-time dependecies.
 COPY glide.yaml.tmpl .
 
+# glide is unable to resolve correctly these deps requiring
+# to import all the dependencies in go-openapi/spec and ghodss/yaml
+RUN go get github.com/go-openapi/spec; \ 
+    go get github.com/ghodss/yaml;
+
 # Compile binaries for the protocol buffer plugins. We need specific
 # versions of these tools, this is why we at first step install glide,
 # download required versions and then installing them.
-RUN go get github.com/go-openapi/spec; \
-    go get github.com/ghodss/yaml; \
-    sed -e "s/@PGGVersion/$PGG_VERSION/" -e "s/@AATVersion/$AATVersion/" glide.yaml.tmpl > glide.yaml; \
+RUN sed -e "s/@PGGVersion/$PGG_VERSION/" -e "s/@AATVersion/$AATVersion/" glide.yaml.tmpl > glide.yaml; \
     glide up --skip-test \
     && cp -r vendor/* ${GOPATH}/src/ \
     && go install github.com/golang/protobuf/protoc-gen-go \
