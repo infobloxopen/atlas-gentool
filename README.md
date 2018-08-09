@@ -41,9 +41,37 @@ docker run --rm -v $(pwd):/go/src/${project} \
 - protoc-gen-gogoslick
 - protoc-gen-gogotypes
 - protoc-gen-gostring
-- protoc-gen-swagger
+- protoc-gen-swagger (**atlas-patch**)
 - protoc-gen-grpc-gateway
 - protoc-gen-validate
 - protoc-gen-govalidators
 - protoc-gen-doc
 - protoc-gen-gorm (**Infoblox Open**)
+
+## protoc-gen-swagger patch
+
+protoc-gen-swagger patch includes following changes:
+
+ * Fixed method comments extraction
+
+ * Rendering of messages that have a primitive type (STRING, INT, BOOLEAN)
+   does not occur if message is used only as a field (not an rpc Request or Response),
+   hence recursive message definitions and complex-structured messages can be presented
+   as plain string query parameters.
+
+ * Introduced new `atlas_patch` flag. If this flag is enabled `--swagger_out="atlas_patch=true:."`
+   following changes are made to a swagger spec:
+
+   * All responses are wrapped with `success` field and assigned to an appropriate response code:
+     GET - 200/OK, POST - 201/CREATED, PUT - 202/UPDATED, DELETE - 203/DELETED.
+
+   * Recursive references are broken up. Such references occur while using protoc-gen-gorm plugin
+     with many-to-many/one-to-many relations.
+
+   * Collection operators from atlas-app-toolkit are provided with documentation and correct
+     names.
+
+   * atlas.rpc.identifier in path is treated correctly and not distributed among path and
+     query parameters, also id.payload_id is replaced with id in path.
+
+   * Unused references elimination.
