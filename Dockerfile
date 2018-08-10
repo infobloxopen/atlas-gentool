@@ -50,6 +50,10 @@ RUN curl -fsSL ${GLIDE_DOWNLOAD_URL} -o glide.tar.gz \
 # Install as the protoc plugins as build-time dependecies.
 COPY glide.yaml.tmpl .
 
+# glide is unable to resolve correctly these deps requiring
+# to import all the dependencies in ghodss/yaml
+RUN go get github.com/ghodss/yaml
+
 # Compile binaries for the protocol buffer plugins. We need specific
 # versions of these tools, this is why we at first step install glide,
 # download required versions and then installing them.
@@ -65,7 +69,6 @@ RUN sed -e "s/@PGGVersion/$PGG_VERSION/" -e "s/@AATVersion/$AATVersion/" glide.y
     && go install github.com/gogo/protobuf/protoc-gen-gogoslick \
     && go install github.com/gogo/protobuf/protoc-gen-gogotypes \
     && go install github.com/gogo/protobuf/protoc-gen-gostring \
-    && go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger \
     && go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway \
     && go install github.com/lyft/protoc-gen-validate \
     && go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators \
@@ -75,6 +78,14 @@ RUN sed -e "s/@PGGVersion/$PGG_VERSION/" -e "s/@AATVersion/$AATVersion/" glide.y
       github.com/infobloxopen/protoc-gen-gorm \
     && rm -rf vendor/* ${GOPATH}/pkg/* \
     && install -c ${GOPATH}/bin/protoc-gen* /out/usr/bin/
+
+# build protoc-gen-swagger separately with atlas_patch
+RUN go get github.com/go-openapi/spec && \
+	rm -rf ${GOPATH}/src/github.com/grpc-ecosystem/ \
+	&& mkdir -p ${GOPATH}/src/github.com/grpc-ecosystem/ && \
+	cd ${GOPATH}/src/github.com/grpc-ecosystem && \
+	git clone --single-branch -b atlas-patch https://github.com/infobloxopen/grpc-gateway.git && \
+	cd grpc-gateway/protoc-gen-swagger && go build -o /out/usr/bin/protoc-gen-swagger main.go
 
 RUN mkdir -p /out/protos && \
     find ${GOPATH}/src -name "*.proto" -exec cp --parents {} /out/protos \;
@@ -90,7 +101,6 @@ RUN upx --lzma \
         /out/usr/bin/protoc-gen-*
 
 
-
 FROM alpine:3.6
 RUN apk add --no-cache libstdc++
 COPY --from=builder /out/usr /usr
@@ -101,7 +111,8 @@ WORKDIR /go/src
 RUN mkdir -p google/protobuf && \
   for f in any duration empty struct timestamp wrappers; do \
     cp /go/src/github.com/golang/protobuf/ptypes/${f}/${f}.proto /go/src/google/protobuf; \
-  done
+  done; \
+  cp /go/src/github.com/google/protobuf/src/google/protobuf/field_mask.proto /go/src/google/protobuf;
 
 # protoc as an entry point for all plugins with import paths set
 ENTRYPOINT ["protoc", "-I.", \

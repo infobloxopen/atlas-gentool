@@ -41,9 +41,15 @@ docker run --rm -v $(pwd):/go/src/${project} \
 - protoc-gen-gogoslick
 - protoc-gen-gogotypes
 - protoc-gen-gostring
-- protoc-gen-swagger
+- protoc-gen-swagger (**atlas-patch**)
 - protoc-gen-grpc-gateway
 - protoc-gen-validate
 - protoc-gen-govalidators
 - protoc-gen-doc
 - protoc-gen-gorm (**Infoblox Open**)
+
+## protoc-gen-swagger patch
+
+atlas-patch is build on top of original protoc-gen-swagger and is intended to
+conform [atlas-app-toolkit REST API Sepcification](https://github.com/infobloxopen/atlas-app-toolkit#rest-api-syntax-specification).
+A full list of modifications can be found [here](https://github.com/infobloxopen/grpc-gateway/tree/atlas-patch/protoc-gen-swagger)
