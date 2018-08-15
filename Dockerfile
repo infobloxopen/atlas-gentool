@@ -76,6 +76,7 @@ RUN sed -e "s/@PGGVersion/$PGG_VERSION/" -e "s/@AATVersion/$AATVersion/" glide.y
     && go install  \
       -ldflags "-X github.com/infobloxopen/protoc-gen-gorm/plugin.ProtocGenGormVersion=$PGG_VERSION -X github.com/infobloxopen/protoc-gen-gorm/plugin.AtlasAppToolkitVersion=$AAT_VERSION" \
       github.com/infobloxopen/protoc-gen-gorm \
+    && go install github.com/infobloxopen/protoc-gen-perm \
     && rm -rf vendor/* ${GOPATH}/pkg/* \
     && install -c ${GOPATH}/bin/protoc-gen* /out/usr/bin/
 
@@ -129,5 +130,7 @@ ENTRYPOINT ["protoc", "-I.", \
     # googleapis proto files
     "-Igithub.com/googleapis/googleapis", \
     # required import paths for protoc-gen-gorm plugin
-    "-Igithub.com/infobloxopen/protoc-gen-gorm" \
+    "-Igithub.com/infobloxopen/protoc-gen-gorm", \
+    # required import paths for protoc-gen-perm plugin
+    "-Igithub.com/infobloxopen/protoc-gen-perm" \
 ]
