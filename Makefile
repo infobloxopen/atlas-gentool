@@ -36,7 +36,8 @@ test-gen:
 	--go_out=plugins=grpc:. \
 	--grpc-gateway_out=logtostderr=true:. \
 	--validate_out="lang=go:." \
-	--gorm_out=. --perm_out=. \
+	--gorm_out=. \
+	--perm_out=. \
 	--swagger_out=:. github.com/infobloxopen/atlas-gentool/testdata/test.proto
 
 test-check:
