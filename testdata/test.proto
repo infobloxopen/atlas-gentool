@@ -6,10 +6,12 @@ import "google/api/annotations.proto";
 import "github.com/lyft/protoc-gen-validate/validate/validate.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "github.com/infobloxopen/protoc-gen-gorm/options/gorm.proto";
+import "github.com/infobloxopen/protoc-gen-atlas-query-perm/options/collection_permissions.proto";
 
 message Example {
   option (gorm.opts).ormable = true;
   string email_address = 1 [(validate.rules).string.email = true];
+  string user_name = 2 [(atlas.query.permissions) = {filters: {allow: "EQ"}, disable_sorting: false}];
 }
 
 service ExampleService {
