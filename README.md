@@ -47,6 +47,7 @@ docker run --rm -v $(pwd):/go/src/${project} \
 - protoc-gen-govalidators
 - protoc-gen-doc
 - protoc-gen-gorm (**Infoblox Open**)
+- protoc-gen-atlas-query-perm (**Infoblox Open**)
 
 ## protoc-gen-swagger patch
 
