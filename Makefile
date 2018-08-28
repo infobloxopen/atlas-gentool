@@ -38,6 +38,7 @@ test-gen:
 	--validate_out="lang=go:." \
 	--gorm_out=. \
 	--atlas-query-perm_out=. \
+	--atlas-validate_out=. \
 	--swagger_out=:. github.com/infobloxopen/atlas-gentool/testdata/test.proto
 
 test-check:
