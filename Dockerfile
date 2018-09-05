@@ -83,10 +83,11 @@ RUN go install  \
       github.com/infobloxopen/protoc-gen-gorm
 
 # Download all dependencies of protoc-gen-atlas-query-perm
-RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-perm && \
-    dep ensure -vendor-only
-
+RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-perm && dep ensure -vendor-only
 RUN go install github.com/infobloxopen/protoc-gen-atlas-query-perm
+
+RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-validate && dep ensure -vendor-only
+RUN go install github.com/infobloxopen/protoc-gen-atlas-validate
 
 RUN rm -rf vendor/* ${GOPATH}/pkg/* \
     && install -c ${GOPATH}/bin/protoc-gen* /out/usr/bin/
@@ -143,5 +144,7 @@ ENTRYPOINT ["protoc", "-I.", \
     # required import paths for protoc-gen-gorm plugin
     "-Igithub.com/infobloxopen/protoc-gen-gorm", \
     # required import paths for protoc-gen-perm plugin
-    "-Igithub.com/infobloxopen/protoc-gen-atlas-query-perm" \
+    "-Igithub.com/infobloxopen/protoc-gen-atlas-query-perm", \
+    # required import paths for protoc-gen-perm plugin
+    "-Igithub.com/infobloxopen/protoc-gen-atlas-validate" \
 ]
