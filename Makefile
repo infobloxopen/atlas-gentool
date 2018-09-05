@@ -44,6 +44,7 @@ test-check:
 	test -e testdata/test.pb.go
 	test -e testdata/test.pb.gw.go
 	test -e testdata/test.pb.gorm.go
+	test -e testdata/test.pb.perm.go
 	test -e testdata/test.pb.validate.go
 	test -e testdata/test.swagger.json
 

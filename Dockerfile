@@ -47,6 +47,10 @@ RUN curl -fsSL ${GLIDE_DOWNLOAD_URL} -o glide.tar.gz \
     && tar -xzf glide.tar.gz --strip-components=1 -C /usr/local/bin \
     && rm -rf glide.tar.gz
 
+# Download and install dep.
+ENV INSTALL_DIRECTORY /usr/local/bin
+RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+
 # Install as the protoc plugins as build-time dependecies.
 COPY glide.yaml.tmpl .
 
@@ -59,25 +63,32 @@ RUN go get github.com/ghodss/yaml
 # download required versions and then installing them.
 RUN sed -e "s/@PGGVersion/$PGG_VERSION/" -e "s/@AATVersion/$AATVersion/" glide.yaml.tmpl > glide.yaml; \
     glide up --skip-test \
-    && cp -r vendor/* ${GOPATH}/src/ \
-    && go install github.com/golang/protobuf/protoc-gen-go \
-    && go install github.com/gogo/protobuf/protoc-gen-combo \
-    && go install github.com/gogo/protobuf/protoc-gen-gofast \
-    && go install github.com/gogo/protobuf/protoc-gen-gogo \
-    && go install github.com/gogo/protobuf/protoc-gen-gogofast \
-    && go install github.com/gogo/protobuf/protoc-gen-gogofaster \
-    && go install github.com/gogo/protobuf/protoc-gen-gogoslick \
-    && go install github.com/gogo/protobuf/protoc-gen-gogotypes \
-    && go install github.com/gogo/protobuf/protoc-gen-gostring \
-    && go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway \
-    && go install github.com/lyft/protoc-gen-validate \
-    && go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators \
-    && go install github.com/pseudomuto/protoc-gen-doc/cmd/... \
-    && go install  \
+    && cp -r vendor/* ${GOPATH}/src/
+
+RUN go install github.com/golang/protobuf/protoc-gen-go
+RUN go install github.com/gogo/protobuf/protoc-gen-combo
+RUN go install github.com/gogo/protobuf/protoc-gen-gofast
+RUN go install github.com/gogo/protobuf/protoc-gen-gogo
+RUN go install github.com/gogo/protobuf/protoc-gen-gogofast
+RUN go install github.com/gogo/protobuf/protoc-gen-gogofaster
+RUN go install github.com/gogo/protobuf/protoc-gen-gogoslick
+RUN go install github.com/gogo/protobuf/protoc-gen-gogotypes
+RUN go install github.com/gogo/protobuf/protoc-gen-gostring
+RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+RUN go install github.com/lyft/protoc-gen-validate
+RUN go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
+RUN go install github.com/pseudomuto/protoc-gen-doc/cmd/...
+RUN go install  \
       -ldflags "-X github.com/infobloxopen/protoc-gen-gorm/plugin.ProtocGenGormVersion=$PGG_VERSION -X github.com/infobloxopen/protoc-gen-gorm/plugin.AtlasAppToolkitVersion=$AAT_VERSION" \
-      github.com/infobloxopen/protoc-gen-gorm \
-    && go install github.com/infobloxopen/protoc-gen-atlas-query-perm \
-    && rm -rf vendor/* ${GOPATH}/pkg/* \
+      github.com/infobloxopen/protoc-gen-gorm
+
+# Download all dependencies of protoc-gen-atlas-query-perm
+RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-perm && \
+    dep ensure -vendor-only
+
+RUN go install github.com/infobloxopen/protoc-gen-atlas-query-perm
+
+RUN rm -rf vendor/* ${GOPATH}/pkg/* \
     && install -c ${GOPATH}/bin/protoc-gen* /out/usr/bin/
 
 # build protoc-gen-swagger separately with atlas_patch
