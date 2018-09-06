@@ -16,7 +16,7 @@ all: latest
 # Create the Docker image with the latest tag.
 .PHONY: latest
 latest:
-	docker build -f Dockerfile -t $(IMAGE_NAME):latest . --network host
+	docker build -f Dockerfile -t $(IMAGE_NAME):latest .
 
 .PHONY: versioned
 versioned:
