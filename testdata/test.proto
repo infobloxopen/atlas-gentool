@@ -7,6 +7,7 @@ import "github.com/lyft/protoc-gen-validate/validate/validate.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "github.com/infobloxopen/protoc-gen-gorm/options/gorm.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-query-perm/options/collection_permissions.proto";
+import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
 
 message Example {
   option (gorm.opts).ormable = true;
@@ -16,11 +17,27 @@ message Example {
 
 service ExampleService {
     rpc Something (Example) returns (Example) {
+        option (atlas_validate.method).allow_unknown_fields = true;
         option (google.api.http) = {
             get: "/example"
         };
     }
+
+    rpc Create (Example) returns (Example) {
+        option (atlas_validate.method).allow_unknown_fields = false;
+        option (google.api.http) = {
+            post: "/example"
+        };
+    }
+
+    rpc Test (Example) returns (Example) {
+        option (google.api.http) = {
+            post: "/test"
+        };
+    }
 }
+
+option (atlas_validate.file).allow_unknown_fields = false;
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
   info: {
