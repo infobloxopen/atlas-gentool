@@ -16,7 +16,7 @@ all: latest
 # Create the Docker image with the latest tag.
 .PHONY: latest
 latest:
-	docker build -f Dockerfile -t $(IMAGE_NAME):latest .
+	docker build -f Dockerfile -t $(IMAGE_NAME):latest . --network host
 
 .PHONY: versioned
 versioned:
@@ -39,6 +39,7 @@ test-gen:
 	--gorm_out=. \
 	--atlas-query-perm_out=. \
 	--atlas-validate_out=. \
+	--preprocess_out=. \
 	--swagger_out=:. github.com/infobloxopen/atlas-gentool/testdata/test.proto
 
 test-check:
@@ -48,6 +49,7 @@ test-check:
 	test -e testdata/test.pb.perm.go
 	test -e testdata/test.pb.atlas.validate.go
 	test -e testdata/test.pb.validate.go
+	test -e testdata/test.pb.preprocess.go
 	test -e testdata/test.swagger.json
 
 test-clean:
