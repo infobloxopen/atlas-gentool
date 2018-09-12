@@ -12,7 +12,7 @@ import "github.com/infobloxopen/protoc-gen-preprocess/options/preprocess.proto";
 
 message Example {
   option (gorm.opts).ormable = true;
-  string email_address = 1 [(validate.rules).string.email = true, (preprocess.field).string.trim_space = true];
+  string email_address = 1 [(validate.rules).string.email = true, (preprocess.field).string = {methods:[lower]}];
   string user_name = 2 [(atlas.query.permissions) = {filters: {allow: "EQ"}, disable_sorting: false}];
 }
 
