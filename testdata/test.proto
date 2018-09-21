@@ -6,14 +6,14 @@ import "google/api/annotations.proto";
 import "github.com/lyft/protoc-gen-validate/validate/validate.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "github.com/infobloxopen/protoc-gen-gorm/options/gorm.proto";
-import "github.com/infobloxopen/protoc-gen-atlas-query-perm/options/collection_permissions.proto";
+import "github.com/infobloxopen/protoc-gen-atlas-query-validate/options/query_validate.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
 import "github.com/infobloxopen/protoc-gen-preprocess/options/preprocess.proto";
 
 message Example {
   option (gorm.opts).ormable = true;
   string email_address = 1 [(validate.rules).string.email = true, (preprocess.field).string = {methods:[lower]}];
-  string user_name = 2 [(atlas.query.permissions) = {filters: {allow: "EQ"}, disable_sorting: false}];
+  string user_name = 2 [(atlas.query.validate) = {allow: EQ, disable_sorting: true}];
 }
 
 service ExampleService {
