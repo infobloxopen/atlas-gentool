@@ -37,7 +37,7 @@ test-gen:
 	--grpc-gateway_out=logtostderr=true:. \
 	--validate_out="lang=go:." \
 	--gorm_out=. \
-	--atlas-query-perm_out=. \
+	--atlas-query-validate_out=. \
 	--atlas-validate_out=. \
 	--preprocess_out=. \
 	--swagger_out=:. github.com/infobloxopen/atlas-gentool/testdata/test.proto
@@ -46,7 +46,7 @@ test-check:
 	test -e testdata/test.pb.go
 	test -e testdata/test.pb.gw.go
 	test -e testdata/test.pb.gorm.go
-	test -e testdata/test.pb.perm.go
+	test -e testdata/test.pb.atlas.query.validate.go
 	test -e testdata/test.pb.atlas.validate.go
 	test -e testdata/test.pb.validate.go
 	test -e testdata/test.pb.preprocess.go

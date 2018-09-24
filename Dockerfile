@@ -82,9 +82,9 @@ RUN go install github.com/infobloxopen/protoc-gen-preprocess
 RUN go install  \
       -ldflags "-X github.com/infobloxopen/protoc-gen-gorm/plugin.ProtocGenGormVersion=$PGG_VERSION -X github.com/infobloxopen/protoc-gen-gorm/plugin.AtlasAppToolkitVersion=$AAT_VERSION" \
       github.com/infobloxopen/protoc-gen-gorm
-# Download all dependencies of protoc-gen-atlas-query-perm
-RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-perm && dep ensure -vendor-only
-RUN go install github.com/infobloxopen/protoc-gen-atlas-query-perm
+# Download all dependencies of protoc-gen-atlas-query-validate
+RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-validate && dep ensure -vendor-only
+RUN go install github.com/infobloxopen/protoc-gen-atlas-query-validate
 
 # Download all dependencies of protoc-gen-atlas-validate
 RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-validate && dep ensure -vendor-only
@@ -144,8 +144,8 @@ ENTRYPOINT ["protoc", "-I.", \
     "-Igithub.com/googleapis/googleapis", \
     # required import paths for protoc-gen-gorm plugin
     "-Igithub.com/infobloxopen/protoc-gen-gorm", \
-    # required import paths for protoc-gen-perm plugin
-    "-Igithub.com/infobloxopen/protoc-gen-atlas-query-perm", \
+    # required import paths for protoc-gen-atlas-query-validate plugin
+    "-Igithub.com/infobloxopen/protoc-gen-atlas-query-validate", \
     # required import paths for protoc-gen-preprocess plugin
     "-Igithub.com/infobloxopen/protoc-gen-preprocess", \
     # required import paths for protoc-gen-atlas-validate plugin
