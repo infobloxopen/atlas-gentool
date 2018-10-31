@@ -21,6 +21,7 @@ latest:
 .PHONY: versioned
 versioned:
 	docker build -f Dockerfile --build-arg PGG_VERSION=$(PGGVersion) --build-arg AAT_VERSION=$(AATVersion) -t $(IMAGE_NAME):$(IMAGE_VERSION) .
+	docker tag $(IMAGE_NAME):$(IMAGE_VERSION) $(IMAGE_NAME):latest
 
 .PHONY: clean
 clean:
@@ -31,7 +32,7 @@ clean:
 test: test-gen test-check test-clean
 
 test-gen:
-	@docker run --rm -v $(SRCROOT_ON_HOST):$(SRCROOT_IN_CONTAINER) \
+	docker run --rm -v $(SRCROOT_ON_HOST):$(SRCROOT_IN_CONTAINER) \
 	 infoblox/atlas-gentool:latest \
 	--go_out=plugins=grpc:. \
 	--grpc-gateway_out=logtostderr=true:. \
@@ -55,6 +56,15 @@ test-check:
 test-clean:
 	rm -f testdata/*.go
 	rm -f testdata/*.json
+
+.PHONY: push-latest push-versioned
+
+push-latest:
+	docker push $(IMAGE_NAME):latest
+
+push-versioned:
+	docker push $(IMAGE_NAME):$(IMAGE_VERSION)
+	docker push $(IMAGE_NAME):latest
 
 .PHONY: version
 version:
