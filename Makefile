@@ -5,7 +5,7 @@ IMAGE_NAME := infoblox/atlas-gentool
 GO_PATH              	:= /go
 SRCROOT_ON_HOST      	:= $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 SRCROOT_IN_CONTAINER  := $(GO_PATH)/src/github.com/infobloxopen/atlas-gentool
-IMAGE_VERSION	        ?= $(shell git describe --tags --dirty=-dev --always)
+IMAGE_VERSION	        ?= $(shell git tag --points-at HEAD | sort -n -r | head -1)
 
 PGGVersion ?= $(shell cat ProtocGenGorm.version)
 AATVersion ?= $(shell cat AtlasAppToolkit.version)
