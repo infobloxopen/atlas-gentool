@@ -7,8 +7,13 @@ SRCROOT_ON_HOST      	:= $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST)))
 SRCROOT_IN_CONTAINER  := $(GO_PATH)/src/github.com/infobloxopen/atlas-gentool
 IMAGE_VERSION	        ?= $(shell git tag --points-at HEAD | sort -n -r | head -1)
 
-PGGVersion ?= $(shell cat ProtocGenGorm.version)
-AATVersion ?= $(shell cat AtlasAppToolkit.version)
+get_version = sed -n 's/^$(1)=//p' plugin.version
+
+AATVersion   ?= $(shell $(call get_version,atlas-app-toolkit))
+PGGVersion   ?= $(shell $(call get_version,protoc-gen-gorm))
+PGAQVVersion ?= $(shell $(call get_version,protoc-gen-atlas-query-validate))
+PGAVVersion  ?= $(shell $(call get_version,protoc-gen-atlas-validate))
+PGPVersion   ?= $(shell $(call get_version,protoc-gen-preprocess))
 
 .PHONY: all
 all: latest
@@ -20,7 +25,13 @@ latest:
 
 .PHONY: versioned
 versioned:
-	docker build -f Dockerfile --build-arg PGG_VERSION=$(PGGVersion) --build-arg AAT_VERSION=$(AATVersion) -t $(IMAGE_NAME):$(IMAGE_VERSION) .
+	docker build -f Dockerfile \
+	 --build-arg AAT_VERSION=$(AATVersion) \
+	 --build-arg PGG_VERSION=$(PGGVersion) \
+	 --build-arg PGAQV_VERSION=$(PGAQVVersion) \
+	 --build-arg PGAV_VERSION=$(PGAVVersion) \
+	 --build-arg PGP_VERSION=$(PGPVersion) \
+	 -t $(IMAGE_NAME):$(IMAGE_VERSION) .
 	docker tag $(IMAGE_NAME):$(IMAGE_VERSION) $(IMAGE_NAME):latest
 
 .PHONY: clean

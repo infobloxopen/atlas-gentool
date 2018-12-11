@@ -1,0 +1,5 @@
+atlas-app-toolkit=v0.15.0
+protoc-gen-gorm=v0.14.1
+protoc-gen-atlas-query-validate=v0.4.0
+protoc-gen-atlas-validate=v0.2.0
+protoc-gen-preprocess=v0.3.1
