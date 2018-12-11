@@ -46,7 +46,6 @@ RUN sed -e "s/@AATVersion/$AAT_VERSION/" \
         -e "s/@PGAVVersion/$PGAV_VERSION/" \
         -e "s/@PGPVersion/$PGP_VERSION/" \
         glide.yaml.tmpl > glide.yaml
-RUN cat glide.yaml
 RUN glide up --skip-test
 RUN cp -r vendor/* ${GOPATH}/src/
 
