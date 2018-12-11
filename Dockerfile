@@ -2,8 +2,12 @@
 FROM golang:1.10-alpine as builder
 LABEL intermediate=true
 MAINTAINER DL NGP-App-Infra-API <ngp-app-infra-api@infoblox.com>
-ARG PGG_VERSION=master
+
 ARG AAT_VERSION=master
+ARG PGG_VERSION=master
+ARG PGAQV_VERSION=master
+ARG PGAV_VERSION=master
+ARG PGP_VERSION=master
 
 # Set up mandatory Go environmental variables.
 ENV CGO_ENABLED=0
@@ -36,9 +40,14 @@ RUN go get github.com/ghodss/yaml
 # Compile binaries for the protocol buffer plugins. We need specific
 # versions of these tools, this is why we at first step install glide,
 # download required versions and then installing them.
-RUN sed -e "s/@PGGVersion/$PGG_VERSION/" -e "s/@AATVersion/$AATVersion/" glide.yaml.tmpl > glide.yaml; \
-    glide up --skip-test \
-    && cp -r vendor/* ${GOPATH}/src/
+RUN sed -e "s/@AATVersion/$AAT_VERSION/" \
+        -e "s/@PGGVersion/$PGG_VERSION/" \
+        -e "s/@PGAQVVersion/$PGAQV_VERSION/" \
+        -e "s/@PGAVVersion/$PGAV_VERSION/" \
+        -e "s/@PGPVersion/$PGP_VERSION/" \
+        glide.yaml.tmpl > glide.yaml
+RUN glide up --skip-test
+RUN cp -r vendor/* ${GOPATH}/src/
 
 RUN go install github.com/golang/protobuf/protoc-gen-go
 RUN go install github.com/gogo/protobuf/protoc-gen-combo
