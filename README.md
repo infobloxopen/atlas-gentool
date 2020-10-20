@@ -50,6 +50,7 @@ docker run --rm -v $(pwd):/go/src/${project} \
 - protoc-gen-atlas-query-validate (**Infoblox Open**)
 - protoc-gen-atlas-validate (**Infoblox Open**)
 - protoc-gen-preprocess (**Infoblox Open**)
+- protoc-gen-jsonschema
 
 ## protoc-gen-swagger patch
 

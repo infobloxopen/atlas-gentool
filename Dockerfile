@@ -58,6 +58,7 @@ RUN go install github.com/gogo/protobuf/protoc-gen-gogofaster
 RUN go install github.com/gogo/protobuf/protoc-gen-gogoslick
 RUN go install github.com/gogo/protobuf/protoc-gen-gogotypes
 RUN go install github.com/gogo/protobuf/protoc-gen-gostring
+RUN go get github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
 RUN go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
 RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 RUN go install github.com/lyft/protoc-gen-validate
