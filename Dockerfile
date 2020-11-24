@@ -15,23 +15,9 @@ ENV CGO_ENABLED=0
 RUN apk update \
     && apk add --no-cache --purge git curl upx
 
-# The version and the binaries checksum for the glide package manager.
-ENV GLIDE_VERSION 0.12.3
-ENV GLIDE_DOWNLOAD_URL https://github.com/Masterminds/glide/releases/download/v${GLIDE_VERSION}/glide-v${GLIDE_VERSION}-linux-amd64.tar.gz
-ENV GLIDE_DOWNLOAD_SHA256 0e2be5e863464610ebc420443ccfab15cdfdf1c4ab63b5eb25d1216900a75109
-
-# Download and install the glide package manager.
-RUN curl -fsSL ${GLIDE_DOWNLOAD_URL} -o glide.tar.gz \
-    && echo "${GLIDE_DOWNLOAD_SHA256}  glide.tar.gz" | sha256sum -c - \
-    && tar -xzf glide.tar.gz --strip-components=1 -C /usr/local/bin \
-    && rm -rf glide.tar.gz
-
 # Download and install dep.
 ENV INSTALL_DIRECTORY /usr/local/bin
 RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-
-# Install as the protoc plugins as build-time dependecies.
-COPY glide.yaml.tmpl .
 
 # glide is unable to resolve correctly these deps requiring
 # to import all the dependencies in ghodss/yaml
