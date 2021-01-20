@@ -8,7 +8,7 @@ language: generic
 jobs:
   include:
     # Latest image build/push
-    - if:  tag IS blank OR commit_message =~ /^Triggered by upstream build/
+    - if:  branch = master AND (tag IS blank OR commit_message) =~ /^Triggered by upstream build/
       script:
         - make latest && make test
       deploy:
