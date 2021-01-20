@@ -61,7 +61,6 @@ RUN go install github.com/gogo/protobuf/protoc-gen-gostring
 RUN go get github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
 RUN go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
 RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-RUN go install github.com/lyft/protoc-gen-validate
 RUN go get github.com/envoyproxy/protoc-gen-validate
 RUN go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
 RUN go install github.com/pseudomuto/protoc-gen-doc/cmd/...
@@ -110,7 +109,7 @@ ENTRYPOINT ["protoc", "-I.", \
     # required import paths for protoc-gen-swagger plugin
     "-Igithub.com/grpc-ecosystem/grpc-gateway", "-Igithub.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options", \
     # required import paths for protoc-gen-validate plugin
-    "-Igithub.com/lyft/protoc-gen-validate/validate", \
+    "-Igithub.com/envoyproxy/protoc-gen-validate/validate", \
     # required import paths for go-proto-validators plugin
     "-Igithub.com/mwitkow/go-proto-validators", \
     # googleapis proto files
