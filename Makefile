@@ -75,7 +75,6 @@ push-latest:
 
 push-versioned:
 	docker push $(IMAGE_NAME):$(IMAGE_VERSION)
-	docker push $(IMAGE_NAME):latest
 
 .PHONY: version
 version:

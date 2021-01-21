@@ -8,14 +8,14 @@ language: generic
 jobs:
   include:
     # Latest image build/push
-    - if:  branch = master AND tag IS blank OR branch = master AND commit_message =~ /^Triggered by upstream build/
+    - if: branch = master
       script:
         - make latest && make test
       deploy:
         provider: script
         script: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin && make push-latest
     # For release purpose
-    - if: tag IS present AND commit_message !~ /^Triggered by upstream build/
+    - if: tag IS present
       script:
         - make versioned && make test
       deploy:
