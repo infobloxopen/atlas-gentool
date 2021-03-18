@@ -10,6 +10,7 @@ jobs:
     # Latest image build/push
     - if: branch = master
       script:
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         - make latest && make test
       deploy:
         provider: script
@@ -17,6 +18,7 @@ jobs:
     # For release purpose
     - if: tag IS present
       script:
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin 
         - make versioned && make test
       deploy:
         on:
