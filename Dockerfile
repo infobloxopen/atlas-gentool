@@ -96,7 +96,7 @@ RUN mkdir -p /out/protos && \
 RUN upx --lzma \
         /out/usr/bin/protoc-gen-*
 
-FROM alpine:3.13.2
+FROM alpine:3.13.4
 RUN apk add --no-cache libstdc++ protobuf-dev
 COPY --from=builder /out/usr /usr
 COPY --from=builder /out/protos /
