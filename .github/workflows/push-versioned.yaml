@@ -1,0 +1,16 @@
+name: Push Versioned Docker Image
+
+on:
+  release:
+    types: [published]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build Versioned Docker image
+        run: make versioned && make test && make push-versioned

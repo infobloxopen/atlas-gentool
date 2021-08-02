@@ -1,0 +1,16 @@
+name: Push Latest Docker Image
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build Latest Docker image
+        run: make latest && make test && make push-latest
