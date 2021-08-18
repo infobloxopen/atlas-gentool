@@ -11,7 +11,6 @@ ARG PGP_VERSION=master
 
 # Set up mandatory Go environmental variables.
 ENV CGO_ENABLED=0
-ENV GO111MODULE=off
 
 RUN apk update \
     && apk add --no-cache --purge git upx
@@ -22,11 +21,12 @@ WORKDIR ${GOPATH}/src/github.com/infobloxopen/atlas-gentool
 COPY go.mod .
 COPY go.sum .
 COPY tools.go .
-RUN GO111MODULE=on go mod vendor
+RUN go mod vendor
+
+# Copy to /go/src so the protos will be available
 RUN cp -r vendor/* ${GOPATH}/src/
 
 # Build protoc tools
-WORKDIR ${GOPATH}/src
 RUN go install github.com/golang/protobuf/protoc-gen-go
 RUN go install github.com/gogo/protobuf/protoc-gen-combo
 RUN go install github.com/gogo/protobuf/protoc-gen-gofast
@@ -46,13 +46,15 @@ RUN go install github.com/infobloxopen/protoc-gen-atlas-query-validate
 RUN go install github.com/infobloxopen/protoc-gen-atlas-validate
 
 # TODO: this should be installed the same way once it is compatible with updated protobuf
-RUN GO111MODULE=on go install  \
+RUN go install  \
       -ldflags "-X github.com/infobloxopen/protoc-gen-gorm/plugin.ProtocGenGormVersion=$PGG_VERSION -X github.com/infobloxopen/protoc-gen-gorm/plugin.AtlasAppToolkitVersion=$AAT_VERSION" \
       github.com/infobloxopen/protoc-gen-gorm@$PGG_VERSION
 
 # Download any projects that have proto-only packages, since go mod ignores those
 RUN cd ${GOPATH}/src/github.com/infobloxopen && rm -rf protoc-gen-gorm && git clone https://github.com/infobloxopen/protoc-gen-gorm && cd protoc-gen-gorm && git checkout $PGG_VERSION
-RUN cd ${GOPATH}/src/github.com && mkdir googleapis && cd googleapis && git clone https://github.com/googleapis/googleapis
+RUN cd ${GOPATH}/src/github.com && mkdir -p googleapis/googleapis && cd googleapis/googleapis && \
+  git init && git remote add origin https://github.com/googleapis/googleapis && git fetch && \
+  git checkout origin/master -- *.proto
 
 RUN mkdir -p /out/usr/bin
 
@@ -65,7 +67,7 @@ RUN go get github.com/go-openapi/spec && \
 	&& mkdir -p ${GOPATH}/src/github.com/grpc-ecosystem/ && \
 	cd ${GOPATH}/src/github.com/grpc-ecosystem && \
 	git clone --single-branch -b atlas-patch https://github.com/infobloxopen/grpc-gateway.git && \
-	cd grpc-gateway/protoc-gen-swagger && go build -o /out/usr/bin/protoc-gen-swagger main.go
+	cd grpc-gateway/protoc-gen-swagger && GO111MODULE=off go build -o /out/usr/bin/protoc-gen-swagger main.go
 
 RUN mkdir -p /out/protos && \
     find ${GOPATH}/src -name "*.proto" -exec cp --parents {} /out/protos \;
@@ -92,8 +94,8 @@ ENTRYPOINT ["protoc", "-I.", \
     "-Igithub.com/mwitkow/go-proto-validators", \
     # googleapis proto files
     "-Igithub.com/googleapis/googleapis", \
-    # required import paths for protoc-gen-gorm plugin
-    "-Igithub.com/infobloxopen/protoc-gen-gorm", \ # Should add /proto path once updated
+    # required import paths for protoc-gen-gorm plugin, Should add /proto path once updated
+    "-Igithub.com/infobloxopen/protoc-gen-gorm", \
     # required import paths for protoc-gen-atlas-query-validate plugin
     "-Igithub.com/infobloxopen/protoc-gen-atlas-query-validate", \
     # required import paths for protoc-gen-preprocess plugin
