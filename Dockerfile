@@ -1,55 +1,32 @@
 # The docker image to generate Golang code from Protol Buffer.
-FROM golang:1.15.5-alpine as builder
+FROM golang:1.16.6-alpine as builder
 LABEL intermediate=true
 MAINTAINER DL NGP-App-Infra-API <ngp-app-infra-api@infoblox.com>
 
 ARG AAT_VERSION=master
-ARG PGG_VERSION=master
+ARG PGG_VERSION=main
 ARG PGAQV_VERSION=master
 ARG PGAV_VERSION=master
 ARG PGP_VERSION=master
 
 # Set up mandatory Go environmental variables.
 ENV CGO_ENABLED=0
-ENV GO111MODULE=off
 
 RUN apk update \
-    && apk add --no-cache --purge git curl upx
+    && apk add --no-cache --purge git upx
 
-# The version and the binaries checksum for the glide package manager.
-ENV GLIDE_VERSION 0.12.3
-ENV GLIDE_DOWNLOAD_URL https://github.com/Masterminds/glide/releases/download/v${GLIDE_VERSION}/glide-v${GLIDE_VERSION}-linux-amd64.tar.gz
-ENV GLIDE_DOWNLOAD_SHA256 0e2be5e863464610ebc420443ccfab15cdfdf1c4ab63b5eb25d1216900a75109
+# Use go modules to download application code and dependencies
 
-# Download and install the glide package manager.
-RUN curl -fsSL ${GLIDE_DOWNLOAD_URL} -o glide.tar.gz \
-    && echo "${GLIDE_DOWNLOAD_SHA256}  glide.tar.gz" | sha256sum -c - \
-    && tar -xzf glide.tar.gz --strip-components=1 -C /usr/local/bin \
-    && rm -rf glide.tar.gz
+WORKDIR ${GOPATH}/src/github.com/infobloxopen/atlas-gentool
+COPY go.mod .
+COPY go.sum .
+COPY tools.go .
+RUN go mod vendor
 
-# Download and install dep.
-ENV INSTALL_DIRECTORY /usr/local/bin
-RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-
-# Install as the protoc plugins as build-time dependecies.
-COPY glide.yaml.tmpl .
-
-# glide is unable to resolve correctly these deps requiring
-# to import all the dependencies in ghodss/yaml
-RUN go get github.com/ghodss/yaml
-
-# Compile binaries for the protocol buffer plugins. We need specific
-# versions of these tools, this is why we at first step install glide,
-# download required versions and then installing them.
-RUN sed -e "s/@AATVersion/$AAT_VERSION/" \
-        -e "s/@PGGVersion/$PGG_VERSION/" \
-        -e "s/@PGAQVVersion/$PGAQV_VERSION/" \
-        -e "s/@PGAVVersion/$PGAV_VERSION/" \
-        -e "s/@PGPVersion/$PGP_VERSION/" \
-        glide.yaml.tmpl > glide.yaml
-RUN glide up --skip-test
+# Copy to /go/src so the protos will be available
 RUN cp -r vendor/* ${GOPATH}/src/
 
+# Build protoc tools
 RUN go install github.com/golang/protobuf/protoc-gen-go
 RUN go install github.com/gogo/protobuf/protoc-gen-combo
 RUN go install github.com/gogo/protobuf/protoc-gen-gofast
@@ -59,23 +36,25 @@ RUN go install github.com/gogo/protobuf/protoc-gen-gogofaster
 RUN go install github.com/gogo/protobuf/protoc-gen-gogoslick
 RUN go install github.com/gogo/protobuf/protoc-gen-gogotypes
 RUN go install github.com/gogo/protobuf/protoc-gen-gostring
-RUN go get github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
 RUN go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
-RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+RUN go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
 RUN go install github.com/envoyproxy/protoc-gen-validate
 RUN go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
 RUN go install github.com/pseudomuto/protoc-gen-doc/cmd/...
 RUN go install github.com/infobloxopen/protoc-gen-preprocess
+RUN go install github.com/infobloxopen/protoc-gen-atlas-query-validate
+RUN go install github.com/infobloxopen/protoc-gen-atlas-validate
+
+# TODO: this should be installed the same way once it is compatible with updated protobuf
 RUN go install  \
       -ldflags "-X github.com/infobloxopen/protoc-gen-gorm/plugin.ProtocGenGormVersion=$PGG_VERSION -X github.com/infobloxopen/protoc-gen-gorm/plugin.AtlasAppToolkitVersion=$AAT_VERSION" \
-      github.com/infobloxopen/protoc-gen-gorm
-# Download all dependencies of protoc-gen-atlas-query-validate
-RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-validate && dep ensure -vendor-only
-RUN go install github.com/infobloxopen/protoc-gen-atlas-query-validate
+      github.com/infobloxopen/protoc-gen-gorm@$PGG_VERSION
 
-# Download all dependencies of protoc-gen-atlas-validate
-RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-validate && dep ensure -vendor-only
-RUN go install github.com/infobloxopen/protoc-gen-atlas-validate
+# Download any projects that have proto-only packages, since go mod ignores those
+RUN cd ${GOPATH}/src/github.com/infobloxopen && rm -rf protoc-gen-gorm && git clone https://github.com/infobloxopen/protoc-gen-gorm && cd protoc-gen-gorm && git checkout $PGG_VERSION
+RUN cd ${GOPATH}/src/github.com && mkdir -p googleapis/googleapis && cd googleapis/googleapis && \
+  git init && git remote add origin https://github.com/googleapis/googleapis && git fetch && \
+  git checkout origin/master -- *.proto
 
 RUN mkdir -p /out/usr/bin
 
@@ -88,7 +67,7 @@ RUN go get github.com/go-openapi/spec && \
 	&& mkdir -p ${GOPATH}/src/github.com/grpc-ecosystem/ && \
 	cd ${GOPATH}/src/github.com/grpc-ecosystem && \
 	git clone --single-branch -b atlas-patch https://github.com/infobloxopen/grpc-gateway.git && \
-	cd grpc-gateway/protoc-gen-swagger && go build -o /out/usr/bin/protoc-gen-swagger main.go
+	cd grpc-gateway/protoc-gen-swagger && GO111MODULE=off go build -o /out/usr/bin/protoc-gen-swagger main.go
 
 RUN mkdir -p /out/protos && \
     find ${GOPATH}/src -name "*.proto" -exec cp --parents {} /out/protos \;
@@ -115,7 +94,7 @@ ENTRYPOINT ["protoc", "-I.", \
     "-Igithub.com/mwitkow/go-proto-validators", \
     # googleapis proto files
     "-Igithub.com/googleapis/googleapis", \
-    # required import paths for protoc-gen-gorm plugin
+    # required import paths for protoc-gen-gorm plugin, Should add /proto path once updated
     "-Igithub.com/infobloxopen/protoc-gen-gorm", \
     # required import paths for protoc-gen-atlas-query-validate plugin
     "-Igithub.com/infobloxopen/protoc-gen-atlas-query-validate", \
