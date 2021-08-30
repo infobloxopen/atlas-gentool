@@ -13,7 +13,7 @@ ARG PGP_VERSION=master
 ENV CGO_ENABLED=0
 
 RUN apk update \
-    && apk add --no-cache --purge git upx
+    && apk add --no-cache --purge git upx dep
 
 # Use go modules to download application code and dependencies
 
@@ -42,7 +42,7 @@ RUN go install github.com/envoyproxy/protoc-gen-validate
 RUN go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
 RUN go install github.com/pseudomuto/protoc-gen-doc/cmd/...
 RUN go install github.com/infobloxopen/protoc-gen-preprocess
-RUN go install github.com/infobloxopen/protoc-gen-atlas-query-validate
+RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-validate && dep ensure && GO111MODULE=off go install .
 RUN go install github.com/infobloxopen/protoc-gen-atlas-validate
 
 # TODO: this should be installed the same way once it is compatible with updated protobuf
