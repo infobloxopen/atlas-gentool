@@ -5,9 +5,6 @@ MAINTAINER DL NGP-App-Infra-API <ngp-app-infra-api@infoblox.com>
 
 ARG AAT_VERSION=master
 ARG PGG_VERSION=main
-ARG PGAQV_VERSION=master
-ARG PGAV_VERSION=master
-ARG PGP_VERSION=master
 
 # Set up mandatory Go environmental variables.
 ENV CGO_ENABLED=0

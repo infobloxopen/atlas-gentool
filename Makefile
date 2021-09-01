@@ -11,17 +11,11 @@ get_version = sed -n 's/^.*$(1) //p' go.mod
 
 AATVersion   ?= $(shell $(call get_version,atlas-app-toolkit))
 PGGVersion   ?= $(shell $(call get_version,protoc-gen-gorm))
-PGAQVVersion ?= $(shell $(call get_version,protoc-gen-atlas-query-validate))
-PGAVVersion  ?= $(shell $(call get_version,protoc-gen-atlas-validate))
-PGPVersion   ?= $(shell $(call get_version,protoc-gen-preprocess))
 
 .PHONY: versions
 versions:
 	@echo atlas-app-toolkit: $(AATVersion)
 	@echo protoc-gen-gorm: $(PGGVersion)
-	@echo protoc-gen-atlas-query-validate: $(PGAQVVersion)
-	@echo protoc-gen-atlas-validate: $(PGAVVersion)
-	@echo protoc-gen-preprocess: $(PGPVersion)
 
 .PHONY: all
 all: latest
@@ -36,9 +30,6 @@ versioned:
 	docker build -f Dockerfile \
 	 --build-arg AAT_VERSION=$(AATVersion) \
 	 --build-arg PGG_VERSION=$(PGGVersion) \
-	 --build-arg PGAQV_VERSION=$(PGAQVVersion) \
-	 --build-arg PGAV_VERSION=$(PGAVVersion) \
-	 --build-arg PGP_VERSION=$(PGPVersion) \
 	 -t $(IMAGE_NAME):$(IMAGE_VERSION) .
 
 .PHONY: clean
