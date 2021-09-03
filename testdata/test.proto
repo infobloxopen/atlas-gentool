@@ -5,7 +5,7 @@ package test;
 import "google/api/annotations.proto";
 import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
-import "github.com/infobloxopen/protoc-gen-gorm/proto/options/gorm.proto";
+import "github.com/infobloxopen/protoc-gen-gorm/options/gorm.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-query-validate/options/query_validate.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
 import "github.com/infobloxopen/protoc-gen-preprocess/options/preprocess.proto";
