@@ -1,3 +1,6 @@
 .vscode
 .idea
 vendor/
+
+testdata/*
+!testdata/test.proto
