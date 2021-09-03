@@ -1,8 +1,7 @@
 name: Push
 on:
-  pull_request:
-    branches:
-      - master
+  push:
+  release:
 jobs:
   test:
     name: image
@@ -28,6 +27,13 @@ jobs:
       - name: Build
         run: |
           make latest && make versioned
+      - name: Testing
+        run: |
+          make test-gen
+      - name: Tests failure
+        if: ${{ failure() }}
+        run: |
+          timeout 10s make test-clean
       - name: Push image
         run: |
           make push-versioned
