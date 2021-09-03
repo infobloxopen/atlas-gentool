@@ -27,7 +27,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
       - name: Build
         run: |
-          make latest && make versioned
+          make docker-build
       - name: Testing
         run: |
           make test-gen
