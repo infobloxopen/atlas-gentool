@@ -4,18 +4,26 @@ package test;
 
 import "google/api/annotations.proto";
 import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
-import "protoc-gen-swagger/options/annotations.proto";
-import "github.com/infobloxopen/protoc-gen-gorm/options/gorm.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "github.com/infobloxopen/protoc-gen-gorm/proto/options/gorm.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-query-validate/options/query_validate.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
 import "github.com/infobloxopen/protoc-gen-preprocess/options/preprocess.proto";
 
+option go_package = "github.com/infobloxopen/atlas-gentool/testdata;test";
+
+/**
+ * Example comprises all the fields that show proper test output.
+ */
 message Example {
   option (gorm.opts).ormable = true;
   string email_address = 1 [(validate.rules).string.email = true, (preprocess.field).string = {methods:[lower]}];
   string user_name = 2 [(atlas.query.validate) = {filtering: {allow: EQ}, sorting: {disable: true}}];
 }
 
+/**
+ * Service for testing generated output.
+ */
 service ExampleService {
     rpc Something (Example) returns (Example) {
         option (atlas_validate.method).allow_unknown_fields = true;
@@ -40,10 +48,10 @@ service ExampleService {
 
 option (atlas_validate.file).allow_unknown_fields = false;
 
-option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
   info: {
     title: "Example";
-    version: "1.0";
+    version: "2.0";
     contact: {
       name: "John Belamaric";
       url: "https://github.com/infobloxopen/atlas-contacts-app";
