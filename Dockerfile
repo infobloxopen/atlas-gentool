@@ -25,14 +25,6 @@ RUN cp -r vendor/* ${GOPATH}/src/
 # Build protoc tools
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go
 RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
-RUN go install github.com/gogo/protobuf/protoc-gen-combo
-RUN go install github.com/gogo/protobuf/protoc-gen-gofast
-RUN go install github.com/gogo/protobuf/protoc-gen-gogo
-RUN go install github.com/gogo/protobuf/protoc-gen-gogofast
-RUN go install github.com/gogo/protobuf/protoc-gen-gogofaster
-RUN go install github.com/gogo/protobuf/protoc-gen-gogoslick
-RUN go install github.com/gogo/protobuf/protoc-gen-gogotypes
-RUN go install github.com/gogo/protobuf/protoc-gen-gostring
 RUN go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
 RUN go install github.com/envoyproxy/protoc-gen-validate
 RUN go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
