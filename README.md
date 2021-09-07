@@ -27,7 +27,7 @@ E.g: `option go_package = "github.com/{your_repo}/{your_app}"`
 
 ```sh
 docker run --rm -v $(pwd):/go/src/${project} \
-    infoblox/atlas-gentool:latest --{plugin}_out={plugin_args} ${project}/{schema}.proto
+    infoblox/atlas-gentool:latest --{plugin}_out={plugin_opt} ${project}/{schema}.proto
 ```
 
 ## Plugins

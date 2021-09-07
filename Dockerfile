@@ -52,7 +52,7 @@ RUN rm -rf vendor/* ${GOPATH}/pkg/* \
 
 # Build protoc-gen-grpc-gateway and protoc-gen-openapiv2 from infobloxopen/grpc-gateway where it is kept consistent
 # with infoblox products (protoc-gen-openapiv2 atlas_patch, etc.).
-RUN cd ${GOPATH}/src/github.com/infobloxopen && git clone --single-branch --branch v2.0.0 https://github.com/infobloxopen/grpc-gateway.git && \
+RUN cd ${GOPATH}/src/github.com/infobloxopen && git clone --single-branch --branch v2.0.1 https://github.com/infobloxopen/grpc-gateway.git && \
     cd ${GOPATH}/src/github.com/infobloxopen/grpc-gateway/protoc-gen-grpc-gateway && go build -o /out/usr/bin/protoc-gen-grpc-gateway main.go && \
     cd ${GOPATH}/src/github.com/infobloxopen/grpc-gateway/protoc-gen-openapiv2 && go build -o /out/usr/bin/protoc-gen-openapiv2 main.go
 
