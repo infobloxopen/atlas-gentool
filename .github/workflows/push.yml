@@ -1,6 +1,8 @@
 name: Push
 on:
   push:
+    branches:
+      - master
   release:
 jobs:
   test:
