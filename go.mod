@@ -9,7 +9,7 @@ require (
 	github.com/go-openapi/spec v0.20.3
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2
-	github.com/infobloxopen/atlas-app-toolkit v1.0.0
+	github.com/infobloxopen/atlas-app-toolkit v1.1.0
 	github.com/infobloxopen/protoc-gen-atlas-query-validate v0.5.2
 	github.com/infobloxopen/protoc-gen-atlas-validate v0.4.2
 	github.com/infobloxopen/protoc-gen-gorm v0.20.1
