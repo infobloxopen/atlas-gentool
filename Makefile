@@ -18,19 +18,16 @@ versions:
 	@echo protoc-gen-gorm: $(PGGVersion)
 
 .PHONY: all
-all: latest
+all: docker-build
 
 # Create the Docker image with the latest tag.
-.PHONY: latest
-latest:
-	docker build -f Dockerfile -t $(IMAGE_NAME):latest --progress=plain .
-
-.PHONY: versioned
-versioned:
+.PHONY: docker-build
+docker-build:
 	docker build -f Dockerfile \
 	 --build-arg AAT_VERSION=$(AATVersion) \
 	 --build-arg PGG_VERSION=$(PGGVersion) \
 	 -t $(IMAGE_NAME):$(IMAGE_VERSION) .
+	docker tag $(IMAGE_NAME):$(IMAGE_VERSION) $(IMAGE_NAME):latest
 
 .PHONY: clean
 clean:

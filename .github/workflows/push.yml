@@ -1,6 +1,8 @@
 name: Push
 on:
   push:
+    branches:
+      - master
   release:
 jobs:
   test:
@@ -19,6 +21,7 @@ jobs:
           # check out actual commit that triggered event
           ref: ${{ github.event.pull_request.head.sha }}
           path: ./src/github.com/${{ github.repository }}
+          fetch-depth: 0
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -26,7 +29,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
       - name: Build
         run: |
-          make latest && make versioned
+          make docker-build
       - name: Testing
         run: |
           make test-gen
