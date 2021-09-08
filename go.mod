@@ -8,12 +8,11 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-openapi/spec v0.20.3
 	github.com/gogo/googleapis v1.4.1 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/infobloxopen/atlas-app-toolkit v1.1.0
 	github.com/infobloxopen/protoc-gen-atlas-query-validate v0.5.2
 	github.com/infobloxopen/protoc-gen-atlas-validate v0.4.2
 	github.com/infobloxopen/protoc-gen-gorm v1.0.0
-	github.com/infobloxopen/protoc-gen-preprocess v0.3.4
+	github.com/infobloxopen/protoc-gen-preprocess v1.0.0
 	github.com/mwitkow/go-proto-validators v0.3.2
 	github.com/pseudomuto/protoc-gen-doc v1.5.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
