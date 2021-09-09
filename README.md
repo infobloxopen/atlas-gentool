@@ -34,14 +34,6 @@ docker run --rm -v $(pwd):/go/src/${project} \
 
 - protoc-gen-go
 - protoc-gen-go-grpc
-- protoc-gen-combo
-- protoc-gen-gofast
-- protoc-gen-gogo
-- protoc-gen-gogofast
-- protoc-gen-gogofaster
-- protoc-gen-gogoslick
-- protoc-gen-gogotypes
-- protoc-gen-gostring
 - protoc-gen-openapiv2 (**Infoblox Open with atlas-patch**)
 - protoc-gen-grpc-gateway (**Infoblox Open**)
 - protoc-gen-doc
