@@ -47,6 +47,7 @@ RUN sed -e "s/@AATVersion/$AAT_VERSION/" \
         -e "s/@PGAVVersion/$PGAV_VERSION/" \
         -e "s/@PGPVersion/$PGP_VERSION/" \
         glide.yaml.tmpl > glide.yaml
+
 RUN glide up --skip-test
 RUN cp -r vendor/* ${GOPATH}/src/
 
@@ -59,16 +60,29 @@ RUN go install github.com/gogo/protobuf/protoc-gen-gogofaster
 RUN go install github.com/gogo/protobuf/protoc-gen-gogoslick
 RUN go install github.com/gogo/protobuf/protoc-gen-gogotypes
 RUN go install github.com/gogo/protobuf/protoc-gen-gostring
+
+RUN mkdir -p ${GOPATH}/src/github.com/chrusty/ && \
+	cd ${GOPATH}/src/github.com/chrusty && \
+	git clone --single-branch -b master https://github.com/chrusty/protoc-gen-jsonschema.git && \
+    cd protoc-gen-jsonschema && git checkout cd4ff2f197c77b367ad30891c21d4ba94ff17600
 RUN go get github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
 RUN go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
+
 RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 RUN go install github.com/envoyproxy/protoc-gen-validate
 RUN go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
 RUN go install github.com/pseudomuto/protoc-gen-doc/cmd/...
 RUN go install github.com/infobloxopen/protoc-gen-preprocess
+
+RUN rm -rf github.com/infobloxopen/protoc-gen-gorm/ && mkdir -p github.com/infobloxopen/protoc-gen-gorm/
+RUN rm -rf vendor/github.com/infobloxopen/protoc-gen-gorm/ && mkdir -p vendor/github.com/infobloxopen/protoc-gen-gorm/
+COPY github.com/infobloxopen/protoc-gen-gorm/ ${GOPATH}/src/github.com/infobloxopen/protoc-gen-gorm/
+COPY github.com/infobloxopen/protoc-gen-gorm/ vendor/github.com/infobloxopen/protoc-gen-gorm/
+
 RUN go install  \
-      -ldflags "-X github.com/infobloxopen/protoc-gen-gorm/plugin.ProtocGenGormVersion=$PGG_VERSION -X github.com/infobloxopen/protoc-gen-gorm/plugin.AtlasAppToolkitVersion=$AAT_VERSION" \
+      -ldflags "-X github.com/infobloxopen/protoc-gen-gorm/plugin.ProtocGenGormVersion=v0.21.0 -X github.com/infobloxopen/protoc-gen-gorm/plugin.AtlasAppToolkitVersion=v0.25.1" \
       github.com/infobloxopen/protoc-gen-gorm
+
 # Download all dependencies of protoc-gen-atlas-query-validate
 RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-validate && dep ensure -vendor-only
 RUN go install github.com/infobloxopen/protoc-gen-atlas-query-validate

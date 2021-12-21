@@ -9,11 +9,37 @@ import "github.com/infobloxopen/protoc-gen-gorm/options/gorm.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-query-validate/options/query_validate.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
 import "github.com/infobloxopen/protoc-gen-preprocess/options/preprocess.proto";
+import "github.com/infobloxopen/atlas-app-toolkit/rpc/resource/resource.proto";
+
+// Address represents information about contact location.
+message Address {
+  option (gorm.opts) = {
+    ormable: true,
+    multi_account: true
+  };
+
+  // The address value.
+  string address = 1;
+
+  // The city name.
+  string city = 2;
+
+  // State name abbrivated to two letters.
+  string state = 3;
+
+  // ZIP code.
+  string zip = 4;
+
+  // Country name.
+  string country = 5;
+}
 
 message Example {
   option (gorm.opts).ormable = true;
-  string email_address = 1 [(validate.rules).string.email = true, (preprocess.field).string = {methods:[lower]}];
-  string user_name = 2 [(atlas.query.validate) = {filtering: {allow: EQ}, sorting: {disable: true}}];
+  atlas.rpc.Identifier id = 1 [(gorm.field).tag = {type: "serial"  primary_key: true}];
+  string email_address = 2 [(validate.rules).string.email = true, (preprocess.field).string = {methods:[lower]}];
+  string user_name = 3 [(atlas.query.validate) = {filtering: {allow: EQ}, sorting: {disable: true}}];
+  Address home_address = 4 [(atlas.query.validate) = {enable_nested_fields: true}];
 }
 
 service ExampleService {
