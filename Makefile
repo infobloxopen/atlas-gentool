@@ -43,7 +43,7 @@ test: test-gen test-check test-clean
 
 test-gen:
 	docker run --rm -v $(SRCROOT_ON_HOST):$(SRCROOT_IN_CONTAINER) \
-	 infoblox/atlas-gentool:latest \
+	 infoblox/atlas-gentool:v23.0 \
 	--go_out=plugins=grpc:. \
 	--grpc-gateway_out=logtostderr=true:. \
 	--validate_out="lang=go:." \

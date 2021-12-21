@@ -9,6 +9,10 @@ import "github.com/infobloxopen/protoc-gen-gorm/options/gorm.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-query-validate/options/query_validate.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
 import "github.com/infobloxopen/protoc-gen-preprocess/options/preprocess.proto";
+import "github.com/infobloxopen/atlas-app-toolkit/rpc/resource/resource.proto";
+import "google/protobuf/timestamp.proto";
+import "github.com/infobloxopen/protoc-gen-gorm/types/types.proto";
+
 
 message Example {
   option (gorm.opts).ormable = true;
@@ -36,6 +40,283 @@ service ExampleService {
             post: "/test"
         };
     }
+}
+
+
+message SaasHost {
+  option (gorm.opts) = {
+    ormable: true,
+    table: "on_prem_hosts",
+  };
+  atlas.rpc.Identifier id = 1 [(gorm.field) = {reference_of: "SaasHost", tag: {type: "text" column: "id_uuid"}}, (atlas_validate.field) = {deny: [update, replace]}];
+  int64 legacy_id = 2 [(gorm.field).tag = {primary_key: true  column: "id"}, (atlas_validate.field) = {deny: [update, replace]}];
+  string identity_account_id = 3 [(atlas_validate.field) = {deny: [update, replace]}];
+  string account_id = 4 [(atlas_validate.field) = {deny: [update, replace]}];
+  atlas.rpc.Identifier pool_id = 5 [(gorm.field) = {reference_of: "SaasPool", tag: {type: "UUID"}}, (atlas_validate.field) = {deny: [update, replace]}];
+  string display_name = 6;
+  string description = 7;
+  int64 revision = 8 [(gorm.field) = {tag: {default: "1"}},(atlas_validate.field) = {deny: [update]}];
+  string ophid = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true,(validate.rules).string = {
+    pattern:   "^[a-zA-Z0-9_-]*$",
+    min_len: 0,
+    max_len: 32,
+  }];
+  string serial_number = 10;
+  string ip_address = 11;
+  string mac_address = 12;
+  string host_type = 13[(gorm.field) = {tag: {default: "0"}}];
+  string cloned_from_ophid = 14;
+  atlas.rpc.Identifier migrated_from_pool = 15 [(gorm.field) = {reference_of: "SaasPool", tag: {type: "UUID"}}, (atlas_validate.field) = {deny: [update, replace]}];
+  string region = 16;
+  string domain_name = 17;
+  string timezone = 18;
+  string site_id = 19;
+  string ip_space = 20;
+  string host_version = 21 [(gorm.field).tag = {ignore: true}];
+  string nat_ip = 22 [(gorm.field).tag = {ignore: true}];
+  string noa_cluster = 23;
+  string csr_status = 24;
+  gorm.types.JSONValue tags = 25;
+  string reassigned_ophid = 26; // this field is deprecated
+  string desired_version = 27;// this field is deprecated
+  google.protobuf.Timestamp mig_start_at = 28; // this field is deprecated
+  google.protobuf.Timestamp mig_end_at = 29; // this field is deprecated
+  google.protobuf.Timestamp last_seen = 30; // this field is deprecated
+  string api_key = 31; // this field is deprecated
+  string username = 32; // this field is deprecated
+  int64 updated_id = 33; // this field is deprecated
+  string type_version = 34; // this field is deprecated
+  string old_username = 35; // this field is deprecated
+  string current_version = 36; // this field is deprecated
+  string elb_region = 37 [(gorm.field).tag = {ignore: true}];
+  string host_subtype = 38 [(gorm.field).tag = {ignore: true}];
+  repeated SaasServiceHostConfig configs = 39 [(gorm.field).has_many = {foreignkey: "HostId", association_foreignkey: "Id", append: true}];
+  google.protobuf.Timestamp created_at = 40;
+  google.protobuf.Timestamp updated_at = 41;
+  google.protobuf.Timestamp deleted_at = 42;
+}
+
+message SaasPool {
+  option (gorm.opts) = {
+    ormable: true,
+    table: "pools"
+  };
+  atlas.rpc.Identifier id = 1 [(gorm.field).tag = {type: "UUID"  primary_key: true}, (atlas_validate.field) = {deny: [update, replace]}];
+  string identity_account_id = 2 [(atlas_validate.field) = {deny: [update, replace]}];
+  string name = 3;
+  string description= 4;
+  int64 revision = 5 [(gorm.field) = {tag: {default: "1"}},(atlas_validate.field) = {deny: [update]}];
+  bool auto_created = 6 [(atlas_validate.field) = {deny: [update]}];
+  gorm.types.JSONValue tags = 7;
+  repeated atlas.rpc.Identifier host_ids = 8 [(gorm.field) = {reference_of: "SaasHost"}];
+  google.protobuf.Timestamp created_at = 9 [(atlas_validate.field) = {deny: [update]}];
+  google.protobuf.Timestamp updated_at = 10 [(atlas_validate.field) = {deny: [update]}];
+  google.protobuf.Timestamp deleted_at = 11 [(atlas_validate.field) = {deny: [update]}];
+}
+
+message SaasServiceHostConfig {
+  option (gorm.opts) = {
+    ormable: true,
+    table: "service_host_configs"
+  };
+  atlas.rpc.Identifier id = 1 [(gorm.field).tag = {type: "UUID"  primary_key: true}, (atlas_validate.field) = {deny: [update, replace]}];
+  string identity_account_id = 2 [(atlas_validate.field) = {deny: [update, replace]}];
+  atlas.rpc.Identifier host_id = 3 [(gorm.field).tag = {type: "text"}, (atlas_validate.field) = {deny: [update, replace]}];
+  atlas.rpc.Identifier service_id = 4 [(gorm.field).tag = {type: "UUID"}, (atlas_validate.field) = {deny: [update, replace]}];
+  string current_version= 5;
+  string service_type = 6;
+  string extra_data = 7;
+  google.protobuf.Timestamp created_at = 8 [(atlas_validate.field) = {deny: [update]}];
+  google.protobuf.Timestamp updated_at = 9 [(atlas_validate.field) = {deny: [update]}];
+  google.protobuf.Timestamp upgraded_at = 10 [(atlas_validate.field) = {deny: [update]}];
+  google.protobuf.Timestamp deleted_at = 11 [(atlas_validate.field) = {deny: [update]}];
+}
+
+// CreateSaasHost Request Structure
+message CreateSaasHostRequest {
+  SaasHost host = 1;
+}
+
+// CreateSaasHost Response Structure
+message CreateSaasHostResponse {
+  SaasHost result = 1;
+}
+
+service SaasHosts {
+
+  option (gorm.server) = {
+    autogen: true,
+    txn_middleware: true,
+  };
+  option (atlas_validate.service).allow_unknown_fields = true;
+
+  /* Create Host Resource.
+  */
+  rpc Create (CreateSaasHostRequest) returns (CreateSaasHostResponse) {
+    option (google.api.http) = {
+      post: "/saas_hosts"
+      body: "host"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      tags: "private"
+    };
+  }
+
+}
+
+// On-Prem-Host Login request body.
+message LoginRequest {
+  // On-Prem-Host Identifier used by on-prem-host.
+  string ophid = 1 [(validate.rules).string = {
+    pattern:   "^[a-zA-Z0-9_-]*$",
+    min_len: 1,
+    max_len: 32,
+  }];
+  // IP Address.
+  string ip_address = 2[(validate.rules).string.min_len = 2]; //the shortest value for IPv6 - "::"
+  // MAC address.
+  string mac_address = 3 [(validate.rules).string.pattern = "^$|^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"];
+  // [1. NIOS , 2. NIOS HA, 3. BloxOne VM , 4. BloxOne Appliance, 5. BloxOne Container, 6. CNIOS].
+  string host_type = 4;
+  // Version
+  string version = 5;
+}
+
+// On-Prem-Host Login response body.
+message LoginResponse {
+  // Reflects the one host resource record.
+  OnPremHost result = 1;
+}
+
+// On-Prem-Host resource record
+message OnPremHost {
+  // The OnPremHost object identifier. Assigned by the service on POST
+  // request. Immutable and present only on retrieval (GET) operations and
+  // as part of the URL.
+  int64 id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // Identifier of a particular account which host belongs.
+  string account_id = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // On-Prem-Host Identifier used by on-prem-host for getting/updating configuration,
+  // setting the status of applications & host. Immutable.
+  // Generated by On-Prem device and assign to hostapp record during Login.
+  string ophid = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true,(validate.rules).string = {
+    pattern:   "^[a-zA-Z0-9_-]*$",
+    min_len: 0,
+    max_len: 32,
+  }];
+
+  //  The authentication token used by the on-prem host to access the service.
+  string api_key = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // On-Prem-Host display name. The name used to identify this object in the GUI.
+  // Should be unique.
+  string display_name = 5;
+
+  // A description of the object.
+  string description = 6;
+
+  // [1. NIOS , 2. NIOS HA, 3. BloxOne VM , 4. BloxOne Appliance, 5. BloxOne Container, 6. CNIOS].
+  string host_type = 7;
+
+  // IP address.
+  string ip_address = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // MAC address.
+  string mac_address = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // Datetime the controller last contacted the service.
+  google.protobuf.Timestamp last_seen = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // Time when a record was updated.
+  google.protobuf.Timestamp updated_at = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // Time when a record was created.
+  google.protobuf.Timestamp created_at = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // The on-prem host sequence number of the change.
+  int64 updated_id = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // Software version string.
+  string current_version = 19 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // Desired version string.
+  string desired_version = 20;
+
+  // The username associated with the API key.
+  string username = 21 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // A unique UUID nonce generated by Host App for use by the on-prem host to identify its DNS logs.
+  string site_id = 22 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // The AWS region used by the on-prem host.
+  string region = 23 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // ELB region.
+  string elb_region = 26 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // NOA cluster location.
+  string noa_cluster = 27 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // Associated tags.
+  gorm.types.JSONValue tags = 16;
+
+  // On-Prem-Host fully qualified domain name/hostname. It should contain valid hostname (via RFC 1034).
+  // Need to use regex for validation due to bug in third-party `protoc-gen-validate` library.
+  // Check issue description https://github.com/lyft/protoc-gen-validate/issues/114
+  string domain_name = 28 [(validate.rules).string = {
+    max_len: 256,
+    pattern: "^$|^([[:alnum:]](([0-9A-Za-z-]{0,61})?[[:alnum:]])?\\.)*([[:alnum:]](([0-9A-Za-z-]{0,61})?[[:alnum:]])?\\.?)$",
+  }];
+
+  // An old OPHID. A marker that host has been reassigned and has got a new OPHID.
+  string reassigned_ophid = 29;
+
+  // Serial number of device registrations.
+  string serial_number = 30 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // Timezone information of the host
+  string timezone = 31 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // OPHID of the original host.
+  string cloned_from_ophid = 32;
+
+  //NIOS version for CNIOS Hosts, Platform version for other Hosts.
+  string host_version = 33;
+
+  // NAT IP address of the host.
+  string nat_ip = 34 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // IP space.
+  string ip_space = 35;
+
+  //last upgraded application
+  string last_upgraded_app = 36 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  // timestamp of the last upgraded application
+  google.protobuf.Timestamp last_upgraded_timestamp = 37 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+
+  //host sub_type for specific host type
+  string host_subtype = 38 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field).read_only = true];
+}
+
+service OnPremHosts {
+  /* NOA Login by username
+
+  Validation:
+   - "ophid" is required.
+   - "ip_address" is required.
+  */
+  rpc Login (LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/on_prem_hosts/login"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      tags: "private"
+    };
+  }
 }
 
 option (atlas_validate.file).allow_unknown_fields = false;
