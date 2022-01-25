@@ -51,10 +51,15 @@ RUN rm -rf vendor/* ${GOPATH}/pkg/* \
     && install -c ${GOPATH}/bin/protoc-gen* /out/usr/bin/
 
 # Build protoc-gen-grpc-gateway and protoc-gen-openapiv2 from infobloxopen/grpc-gateway where it is kept consistent
-# with infoblox products (protoc-gen-openapiv2 atlas_patch, etc.).
+# with infoblox products (protoc-gen-openapiv2 etc.).
+# TODO: identify all custom changes in the repo. Port the changes to opensource and use opensource version of grpc-gateway
 RUN cd ${GOPATH}/src/github.com/infobloxopen && git clone --single-branch --branch v2.0.2 https://github.com/infobloxopen/grpc-gateway.git && \
     cd ${GOPATH}/src/github.com/infobloxopen/grpc-gateway/protoc-gen-grpc-gateway && go build -o /out/usr/bin/protoc-gen-grpc-gateway main.go && \
     cd ${GOPATH}/src/github.com/infobloxopen/grpc-gateway/protoc-gen-openapiv2 && go build -o /out/usr/bin/protoc-gen-openapiv2 main.go
+
+# Build with infoblox atlas_patch.
+RUN cd ${GOPATH}/src/github.com/infobloxopen && git clone --single-branch --branch v1.0.0 https://github.com/infobloxopen/atlas-openapiv2-patch.git && \
+    cd ${GOPATH}/src/github.com/infobloxopen/atlas-openapiv2-patch && go mod vendor && go build -o /out/usr/bin/atlas_patch ./cmd/server/.
 
 RUN mkdir -p /out/protos && \
     find ${GOPATH}/src -name "*.proto" -exec cp --parents {} /out/protos \;
