@@ -1,5 +1,5 @@
 # The docker image to generate Golang code from Protol Buffer.
-FROM golang:1.17.0-alpine3.14 as builder
+FROM golang:1.18.0-alpine3.14 as builder
 LABEL intermediate=true
 MAINTAINER DL NGP-App-Infra-API <ngp-app-infra-api@infoblox.com>
 
