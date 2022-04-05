@@ -10,7 +10,7 @@ require (
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/infobloxopen/atlas-app-toolkit v1.1.0
 	github.com/infobloxopen/protoc-gen-atlas-query-validate v0.5.2
-	github.com/infobloxopen/protoc-gen-atlas-validate v0.4.2
+	github.com/infobloxopen/protoc-gen-atlas-validate v0.5.0
 	github.com/infobloxopen/protoc-gen-gorm v1.0.1
 	github.com/infobloxopen/protoc-gen-preprocess v1.0.0
 	github.com/mwitkow/go-proto-validators v0.3.2
