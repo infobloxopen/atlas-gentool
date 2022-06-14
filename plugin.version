@@ -1,4 +1,4 @@
-atlas-app-toolkit=v0.22.0
+atlas-app-toolkit=v0.19.3
 protoc-gen-gorm=v0.20.0
 protoc-gen-atlas-query-validate=v0.5.1
 protoc-gen-atlas-validate=v0.4.1

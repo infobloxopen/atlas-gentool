@@ -1,5 +1,5 @@
 # The docker image to generate Golang code from Protol Buffer.
-FROM golang:1.14-alpine as builder
+FROM golang:1.17.0-alpine3.14 as builder
 LABEL intermediate=true
 MAINTAINER DL NGP-App-Infra-API <ngp-app-infra-api@infoblox.com>
 
@@ -11,6 +11,7 @@ ARG PGP_VERSION=master
 
 # Set up mandatory Go environmental variables.
 ENV CGO_ENABLED=0
+ENV GO111MODULE=off
 
 RUN apk update \
     && apk add --no-cache --purge git curl upx
@@ -61,8 +62,7 @@ RUN go install github.com/gogo/protobuf/protoc-gen-gostring
 RUN go get github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
 RUN go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
 RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-RUN go install github.com/lyft/protoc-gen-validate
-RUN go get github.com/envoyproxy/protoc-gen-validate
+RUN go install github.com/envoyproxy/protoc-gen-validate
 RUN go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
 RUN go install github.com/pseudomuto/protoc-gen-doc/cmd/...
 RUN go install github.com/infobloxopen/protoc-gen-preprocess
@@ -110,7 +110,7 @@ ENTRYPOINT ["protoc", "-I.", \
     # required import paths for protoc-gen-swagger plugin
     "-Igithub.com/grpc-ecosystem/grpc-gateway", "-Igithub.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options", \
     # required import paths for protoc-gen-validate plugin
-    "-Igithub.com/lyft/protoc-gen-validate/validate", \
+    "-Igithub.com/envoyproxy/protoc-gen-validate/validate", \
     # required import paths for go-proto-validators plugin
     "-Igithub.com/mwitkow/go-proto-validators", \
     # googleapis proto files
