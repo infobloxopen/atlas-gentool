@@ -1,8 +1,10 @@
 syntax = "proto3";
 
-package test;
+package test.foo;
 
 import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
 import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 import "github.com/infobloxopen/protoc-gen-gorm/proto/options/gorm.proto";
@@ -19,6 +21,8 @@ message Example {
   option (gorm.opts).ormable = true;
   string email_address = 1 [(validate.rules).string.email = true, (preprocess.field).string = {methods:[lower]}];
   string user_name = 2 [(atlas.query.validate) = {filtering: {allow: EQ}, sorting: {disable: true}}];
+  google.protobuf.Struct foo_object = 3;
+  google.protobuf.Empty non_object = 4;
 }
 
 /**

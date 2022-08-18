@@ -3,14 +3,11 @@ FROM golang:1.17.0-alpine3.14 as builder
 LABEL intermediate=true
 MAINTAINER DL NGP-App-Infra-API <ngp-app-infra-api@infoblox.com>
 
-ARG AAT_VERSION=master
-ARG PGG_VERSION=main
-
 # Set up mandatory Go environmental variables.
 ENV CGO_ENABLED=0
 
 RUN apk update \
-    && apk add --no-cache --purge git upx dep
+    && apk add --no-cache --purge git dep
 
 # Use go modules to download application code and dependencies
 WORKDIR ${GOPATH}/src/github.com/infobloxopen/atlas-gentool
@@ -32,18 +29,7 @@ RUN go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
 RUN go install github.com/infobloxopen/protoc-gen-preprocess
 RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-validate && dep ensure && GO111MODULE=off go install .
 RUN go install github.com/infobloxopen/protoc-gen-atlas-validate
-
-# TODO: this should be installed the same way once it is compatible with updated protobuf
-RUN go install  \
-      -ldflags "-X github.com/infobloxopen/protoc-gen-gorm/plugin.ProtocGenGormVersion=$PGG_VERSION -X github.com/infobloxopen/protoc-gen-gorm/plugin.AtlasAppToolkitVersion=$AAT_VERSION" \
-      github.com/infobloxopen/protoc-gen-gorm@$PGG_VERSION
-
-# Download any projects that have proto-only packages, since go mod ignores those
-RUN cd ${GOPATH}/src/github.com/infobloxopen && rm -rf protoc-gen-gorm && \
-    git clone https://github.com/infobloxopen/protoc-gen-gorm && cd protoc-gen-gorm && git checkout $PGG_VERSION
-RUN cd ${GOPATH}/src/github.com && mkdir -p googleapis/googleapis && cd googleapis/googleapis && \
-    git init && git remote add origin https://github.com/googleapis/googleapis && git fetch && \
-    git checkout origin/master -- *.proto
+RUN go install github.com/infobloxopen/protoc-gen-gorm
 
 RUN mkdir -p /out/usr/bin
 
@@ -61,13 +47,12 @@ RUN cd ${GOPATH}/src/github.com/infobloxopen && git clone --single-branch --bran
 RUN cd ${GOPATH}/src/github.com/infobloxopen && git clone --single-branch --branch v1.0.0 https://github.com/infobloxopen/atlas-openapiv2-patch.git && \
     cd ${GOPATH}/src/github.com/infobloxopen/atlas-openapiv2-patch && go mod vendor && go build -o /out/usr/bin/atlas_patch ./cmd/server/.
 
-RUN mkdir -p /out/protos && \
-    find ${GOPATH}/src -name "*.proto" -exec cp --parents {} /out/protos \;
+# Copy in proto files, some are in non-go packages and are stored in third_party
+# instead of being cloned from GitHub every build
+COPY third_party/ /out/protos/go/src
+RUN find ${GOPATH}/src -name "*.proto" -exec cp --parents {} /out/protos \;
 
-RUN upx --lzma \
-        /out/usr/bin/protoc-gen-*
-
-FROM alpine:3.14.2
+FROM alpine:3.15
 RUN apk add --no-cache libstdc++ protobuf-dev
 COPY --from=builder /out/usr /usr
 COPY --from=builder /out/protos /
@@ -83,8 +68,6 @@ ENTRYPOINT ["protoc", "-I.", \
     "-Igithub.com/envoyproxy/protoc-gen-validate/validate", \
     # required import paths for go-proto-validators plugin
     "-Igithub.com/mwitkow/go-proto-validators", \
-    # googleapis proto files
-    "-Igithub.com/googleapis/googleapis", \
     # required import paths for protoc-gen-gorm plugin, Should add /proto path once updated
     "-Igithub.com/infobloxopen/protoc-gen-gorm", \
     # required import paths for protoc-gen-atlas-query-validate plugin
