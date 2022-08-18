@@ -52,7 +52,7 @@ RUN cd ${GOPATH}/src/github.com/infobloxopen && git clone --single-branch --bran
 COPY third_party/ /out/protos/go/src
 RUN find ${GOPATH}/src -name "*.proto" -exec cp --parents {} /out/protos \;
 
-FROM alpine:3.15
+FROM alpine:3.16.2
 RUN apk add --no-cache libstdc++ protobuf-dev
 COPY --from=builder /out/usr /usr
 COPY --from=builder /out/protos /
