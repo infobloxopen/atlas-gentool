@@ -7,25 +7,13 @@ SRCROOT_ON_HOST         := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST)
 SRCROOT_IN_CONTAINER    := $(GO_PATH)/src/github.com/infobloxopen/atlas-gentool
 IMAGE_VERSION           ?= $(shell git describe --tags)
 
-get_version = sed -n 's/^.*$(1) //p' go.mod
-
-AATVersion   ?= $(shell $(call get_version,atlas-app-toolkit))
-PGGVersion   ?= $(shell $(call get_version,protoc-gen-gorm))
-
-.PHONY: versions
-versions:
-	@echo atlas-app-toolkit: $(AATVersion)
-	@echo protoc-gen-gorm: $(PGGVersion)
-
 .PHONY: all
 all: docker-build
 
-# Create the Docker image with the latest tag.
+# Create the Docker image locally
 .PHONY: docker-build
 docker-build:
 	docker build -f Dockerfile \
-	 --build-arg AAT_VERSION=$(AATVersion) \
-	 --build-arg PGG_VERSION=$(PGGVersion) \
 	 -t $(IMAGE_NAME):$(IMAGE_VERSION) .
 	docker tag $(IMAGE_NAME):$(IMAGE_VERSION) $(IMAGE_NAME):latest
 
@@ -62,19 +50,26 @@ test-check:
 	test -e testdata/test.pb.preprocess.go
 	test -e testdata/test.swagger.json
 	test -e testdata/test.md
+	go mod vendor && go test ./testdata
 
 test-clean:
 	rm -f testdata/*.go
 	rm -f testdata/*.json
 	rm -f testdata/*.md
 
+# push with multi-arch builds
 .PHONY: push-latest push-versioned
+PLATFORMS ?= linux/amd64,linux/arm64,linux/arm/v7
 
 push-latest:
-	docker push $(IMAGE_NAME):latest
+	docker buildx build -f Dockerfile --push \
+	 --platform $(PLATFORMS) \
+	 -t $(IMAGE_NAME):latest .
 
 push-versioned:
-	docker push $(IMAGE_NAME):$(IMAGE_VERSION)
+	docker buildx build -f Dockerfile --push \
+	 --platform $(PLATFORMS) \
+	 -t $(IMAGE_NAME):$(IMAGE_VERSION) .
 
 .PHONY: version
 version:

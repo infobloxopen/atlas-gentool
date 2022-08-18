@@ -4,3 +4,4 @@ vendor/
 
 testdata/*
 !testdata/test.proto
+!testdata/test_test.go
