@@ -32,7 +32,7 @@ jobs:
           make docker-build
       - name: Testing
         run: |
-          make test-gen
+          make test-gen test-check
       - name: Tests failure
         if: ${{ failure() }}
         run: |
