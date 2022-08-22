@@ -10,8 +10,8 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.2
 	github.com/infobloxopen/atlas-app-toolkit v1.2.1
 	github.com/infobloxopen/protoc-gen-atlas-query-validate v0.5.2
-	github.com/infobloxopen/protoc-gen-atlas-validate v1.0.0
-	github.com/infobloxopen/protoc-gen-gorm v1.1.0
+	github.com/infobloxopen/protoc-gen-atlas-validate v1.0.1
+	github.com/infobloxopen/protoc-gen-gorm v1.1.1
 	github.com/infobloxopen/protoc-gen-preprocess v1.0.1
 	github.com/mwitkow/go-proto-validators v0.3.2
 	github.com/pseudomuto/protoc-gen-doc v1.5.1

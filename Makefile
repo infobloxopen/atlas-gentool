@@ -53,7 +53,7 @@ test-check:
 	go mod vendor && go test ./testdata
 
 test-clean:
-	rm -f testdata/*.go
+	find testdata -type f -name '*pb*.go' -delete
 	rm -f testdata/*.json
 	rm -f testdata/*.md
 

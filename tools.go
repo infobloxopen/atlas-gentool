@@ -27,5 +27,6 @@ import (
 	_ "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
 	_ "github.com/infobloxopen/protoc-gen-gorm"
 	_ "github.com/infobloxopen/protoc-gen-gorm/errors"
+	_ "github.com/infobloxopen/protoc-gen-gorm/types"
 	_ "github.com/infobloxopen/protoc-gen-preprocess"
 )

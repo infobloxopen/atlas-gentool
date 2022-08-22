@@ -8,6 +8,7 @@ import "google/protobuf/empty.proto";
 import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 import "github.com/infobloxopen/protoc-gen-gorm/proto/options/gorm.proto";
+import "github.com/infobloxopen/protoc-gen-gorm/proto/types/types.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-query-validate/options/query_validate.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
 import "github.com/infobloxopen/protoc-gen-preprocess/options/preprocess.proto";
@@ -23,6 +24,7 @@ message Example {
   string user_name = 2 [(atlas.query.validate) = {filtering: {allow: EQ}, sorting: {disable: true}}];
   google.protobuf.Struct foo_object = 3;
   google.protobuf.Empty non_object = 4;
+  repeated gorm.types.JSONValue extra_stuff = 5;
 }
 
 /**
