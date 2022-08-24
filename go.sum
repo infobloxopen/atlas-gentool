@@ -258,8 +258,8 @@ github.com/infobloxopen/protoc-gen-atlas-query-validate v0.5.2 h1:0NcDUEp5XWg90t
 github.com/infobloxopen/protoc-gen-atlas-query-validate v0.5.2/go.mod h1:twm2xhXP5FicP4JyRVXcLuaWAEp+IwVYHdCkm6uogCI=
 github.com/infobloxopen/protoc-gen-atlas-validate v1.0.1 h1:fnHjAsbSnBfAffh8B5vxOXa5JPFi+8fqOHFdwqeFU1E=
 github.com/infobloxopen/protoc-gen-atlas-validate v1.0.1/go.mod h1:8mvvU+9brTltCbn9L8V5KUnPs6+7JcmSW13MeJhgOv8=
-github.com/infobloxopen/protoc-gen-gorm v1.1.1 h1:UwbVXDEhTwwVxqhPaj7IJyt0osoRDCNOoaR6Fj8HQ4w=
-github.com/infobloxopen/protoc-gen-gorm v1.1.1/go.mod h1:ohzLmmFMWQztw2RBHunfjKSCjTPUW4JvbgU1Mdazwxg=
+github.com/infobloxopen/protoc-gen-gorm v1.1.2 h1:duf3zI/miY1uSvm6LQA5stAwucZWnfcdR9L34PbIuOw=
+github.com/infobloxopen/protoc-gen-gorm v1.1.2/go.mod h1:ohzLmmFMWQztw2RBHunfjKSCjTPUW4JvbgU1Mdazwxg=
 github.com/infobloxopen/protoc-gen-preprocess v1.0.1 h1:iYdq2LiHvsxqY7PTCCNJDnUR/bWrlW0dgu/SqEQZrrQ=
 github.com/infobloxopen/protoc-gen-preprocess v1.0.1/go.mod h1:fgbTDnHIaOIj4mxDCbSYdJiFMuXFIS5mldUgX2/eKdk=
 github.com/jhump/protoreflect v1.8.1/go.mod h1:7GcYQDdMU/O/BBrl/cX6PNHpXh6cenjd8pneu5yW7Tg=
