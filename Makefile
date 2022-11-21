@@ -32,7 +32,6 @@ versioned:
 	 --build-arg PGAV_VERSION=$(PGAVVersion) \
 	 --build-arg PGP_VERSION=$(PGPVersion) \
 	 -t $(IMAGE_NAME):$(IMAGE_VERSION) .
-	docker tag $(IMAGE_NAME):$(IMAGE_VERSION) $(IMAGE_NAME):latest
 
 .PHONY: clean
 clean:
@@ -44,7 +43,7 @@ test: test-gen test-check test-clean
 
 test-gen:
 	docker run --rm -v $(SRCROOT_ON_HOST):$(SRCROOT_IN_CONTAINER) \
-	 infoblox/atlas-gentool:latest \
+	 infoblox/atlas-gentool:$(IMAGE_VERSION) \
 	--go_out=plugins=grpc:. \
 	--grpc-gateway_out=logtostderr=true:. \
 	--validate_out="lang=go:." \

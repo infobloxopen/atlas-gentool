@@ -3,7 +3,7 @@ syntax = "proto3";
 package test;
 
 import "google/api/annotations.proto";
-import "github.com/lyft/protoc-gen-validate/validate/validate.proto";
+import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "github.com/infobloxopen/protoc-gen-gorm/options/gorm.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-query-validate/options/query_validate.proto";
