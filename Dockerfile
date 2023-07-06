@@ -11,7 +11,7 @@ ARG PGP_VERSION=master
 
 # Set up mandatory Go environmental variables.
 ENV CGO_ENABLED=0
-ENV GO111MODULE=off
+ENV GO111MODULE=on
 
 RUN apk update \
     && apk add --no-cache --purge git curl upx
@@ -50,32 +50,32 @@ RUN sed -e "s/@AATVersion/$AAT_VERSION/" \
 RUN glide up --skip-test
 RUN cp -r vendor/* ${GOPATH}/src/
 
-RUN go install github.com/golang/protobuf/protoc-gen-go
-RUN go install github.com/gogo/protobuf/protoc-gen-combo
-RUN go install github.com/gogo/protobuf/protoc-gen-gofast
-RUN go install github.com/gogo/protobuf/protoc-gen-gogo
-RUN go install github.com/gogo/protobuf/protoc-gen-gogofast
-RUN go install github.com/gogo/protobuf/protoc-gen-gogofaster
-RUN go install github.com/gogo/protobuf/protoc-gen-gogoslick
-RUN go install github.com/gogo/protobuf/protoc-gen-gogotypes
-RUN go install github.com/gogo/protobuf/protoc-gen-gostring
-RUN go get github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
-RUN go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
-RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-RUN go install github.com/envoyproxy/protoc-gen-validate
-RUN go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
-RUN go install github.com/pseudomuto/protoc-gen-doc/cmd/...
-RUN go install github.com/infobloxopen/protoc-gen-preprocess
+RUN go install github.com/golang/protobuf/protoc-gen-go@latest
+RUN go install github.com/gogo/protobuf/protoc-gen-combo@latest
+RUN go install github.com/gogo/protobuf/protoc-gen-gofast@latest
+RUN go install github.com/gogo/protobuf/protoc-gen-gogo@latest
+RUN go install github.com/gogo/protobuf/protoc-gen-gogofast@latest
+RUN go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
+RUN go install github.com/gogo/protobuf/protoc-gen-gogoslick@latest
+RUN go install github.com/gogo/protobuf/protoc-gen-gogotypes@latest
+RUN go install github.com/gogo/protobuf/protoc-gen-gostring@latest
+RUN go get github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema@latest
+RUN go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema@latest
+RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@latest
+RUN go install github.com/envoyproxy/protoc-gen-validate@latest
+RUN go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators@latest
+RUN go install github.com/pseudomuto/protoc-gen-doc/cmd/...@latest
+RUN go install github.com/infobloxopen/protoc-gen-preprocess@latest
 RUN go install  \
       -ldflags "-X github.com/infobloxopen/protoc-gen-gorm/plugin.ProtocGenGormVersion=$PGG_VERSION -X github.com/infobloxopen/protoc-gen-gorm/plugin.AtlasAppToolkitVersion=$AAT_VERSION" \
-      github.com/infobloxopen/protoc-gen-gorm
+      github.com/infobloxopen/protoc-gen-gorm@latest
 # Download all dependencies of protoc-gen-atlas-query-validate
 RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-validate && dep ensure -vendor-only
-RUN go install github.com/infobloxopen/protoc-gen-atlas-query-validate
+RUN go install github.com/infobloxopen/protoc-gen-atlas-query-validate@latest
 
 # Download all dependencies of protoc-gen-atlas-validate
 RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-validate && dep ensure -vendor-only
-RUN go install github.com/infobloxopen/protoc-gen-atlas-validate
+RUN go install github.com/infobloxopen/protoc-gen-atlas-validate@latest
 
 RUN mkdir -p /out/usr/bin
 
@@ -89,6 +89,10 @@ RUN go get github.com/go-openapi/spec && \
 	cd ${GOPATH}/src/github.com/grpc-ecosystem && \
 	git clone --single-branch -b atlas-patch https://github.com/infobloxopen/grpc-gateway.git && \
 	cd grpc-gateway/protoc-gen-swagger && go build -o /out/usr/bin/protoc-gen-swagger main.go
+
+# Build with infoblox atlas_patch.
+RUN cd ${GOPATH}/src/github.com/infobloxopen && git clone --single-branch -b v1.0.1 https://github.com/infobloxopen/atlas-openapiv2-patch.git && \
+    cd ${GOPATH}/src/github.com/infobloxopen/atlas-openapiv2-patch && go mod vendor && go build -o /out/usr/bin/atlas_patch ./cmd/server/.
 
 RUN mkdir -p /out/protos && \
     find ${GOPATH}/src -name "*.proto" -exec cp --parents {} /out/protos \;
