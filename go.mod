@@ -11,7 +11,7 @@ require (
 	github.com/infobloxopen/atlas-app-toolkit v1.2.2-0.20220721202134-28480c4993fc
 	github.com/infobloxopen/protoc-gen-atlas-query-validate v0.5.2
 	github.com/infobloxopen/protoc-gen-atlas-validate v1.0.1
-	github.com/infobloxopen/protoc-gen-gorm v1.1.3-0.20230726042158-40bd640e819c
+	github.com/infobloxopen/protoc-gen-gorm v1.1.3-0.20230726085533-76a99c197982
 	github.com/infobloxopen/protoc-gen-preprocess v1.0.1
 	github.com/mwitkow/go-proto-validators v0.3.2
 	github.com/pseudomuto/protoc-gen-doc v1.5.1
