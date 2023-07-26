@@ -205,8 +205,8 @@ github.com/infobloxopen/protoc-gen-atlas-query-validate v0.5.2 h1:0NcDUEp5XWg90t
 github.com/infobloxopen/protoc-gen-atlas-query-validate v0.5.2/go.mod h1:twm2xhXP5FicP4JyRVXcLuaWAEp+IwVYHdCkm6uogCI=
 github.com/infobloxopen/protoc-gen-atlas-validate v1.0.1 h1:fnHjAsbSnBfAffh8B5vxOXa5JPFi+8fqOHFdwqeFU1E=
 github.com/infobloxopen/protoc-gen-atlas-validate v1.0.1/go.mod h1:8mvvU+9brTltCbn9L8V5KUnPs6+7JcmSW13MeJhgOv8=
-github.com/infobloxopen/protoc-gen-gorm v1.1.3-0.20230726042158-40bd640e819c h1:flmNNIxR7bcQfAo5ZdoxScM/nkfysyr1oP3OA8ZamcM=
-github.com/infobloxopen/protoc-gen-gorm v1.1.3-0.20230726042158-40bd640e819c/go.mod h1:TF+6OHwySHdbeyWWasN9cJ9iwD4LI9AkeIS6wiPyins=
+github.com/infobloxopen/protoc-gen-gorm v1.1.3-0.20230726085533-76a99c197982 h1:lBsOB5as8/zjx7aKgHBQJ26bOog49nQBzt+clramzmg=
+github.com/infobloxopen/protoc-gen-gorm v1.1.3-0.20230726085533-76a99c197982/go.mod h1:TF+6OHwySHdbeyWWasN9cJ9iwD4LI9AkeIS6wiPyins=
 github.com/infobloxopen/protoc-gen-preprocess v1.0.1 h1:iYdq2LiHvsxqY7PTCCNJDnUR/bWrlW0dgu/SqEQZrrQ=
 github.com/infobloxopen/protoc-gen-preprocess v1.0.1/go.mod h1:fgbTDnHIaOIj4mxDCbSYdJiFMuXFIS5mldUgX2/eKdk=
 github.com/jackc/chunkreader v1.0.0 h1:4s39bBR8ByfqH+DKm8rQA3E1LHZWB9XWcrz8fqaZbe0=
