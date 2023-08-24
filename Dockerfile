@@ -1,5 +1,5 @@
 # The docker image to generate Golang code from Protol Buffer.
-FROM golang:1.17.0-alpine3.14 as builder
+FROM golang:1.18.0-alpine3.14 as builder
 LABEL intermediate=true
 MAINTAINER DL NGP-App-Infra-API <ngp-app-infra-api@infoblox.com>
 
@@ -60,8 +60,7 @@ RUN go install github.com/gogo/protobuf/protoc-gen-gogoslick
 RUN go install github.com/gogo/protobuf/protoc-gen-gogotypes
 RUN go install github.com/gogo/protobuf/protoc-gen-gostring
 ENV GO111MODULE=on
-RUN go get github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema@switch_jsonschema_library
-RUN go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema@switch_jsonschema_library
+RUN go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema@1.1.0
 ENV GO111MODULE=off
 RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 RUN go install github.com/envoyproxy/protoc-gen-validate
@@ -96,7 +95,7 @@ ENV GO111MODULE=on
 # Build with infoblox atlas_patch.
 RUN cd ${GOPATH}/src/github.com/infobloxopen && git clone --single-branch -b v1.0.1 https://github.com/infobloxopen/atlas-openapiv2-patch.git && \
     cd ${GOPATH}/src/github.com/infobloxopen/atlas-openapiv2-patch && go mod vendor && go build -o /out/usr/bin/atlas_patch ./cmd/server/.
-ENV GO111MODULE=on
+ENV GO111MODULE=off
 
 RUN mkdir -p /out/protos && \
     find ${GOPATH}/src -name "*.proto" -exec cp --parents {} /out/protos \;
