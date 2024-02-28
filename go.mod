@@ -11,7 +11,7 @@ require (
 	github.com/infobloxopen/atlas-app-toolkit v1.2.2-0.20220721202134-28480c4993fc
 	github.com/infobloxopen/protoc-gen-atlas-query-validate v0.5.2
 	github.com/infobloxopen/protoc-gen-atlas-validate v1.0.1
-	github.com/infobloxopen/protoc-gen-gorm v1.1.3-0.20230726085533-76a99c197982
+	github.com/infobloxopen/protoc-gen-gorm v1.1.3-0.20240226114739-e6a09f24e26f
 	github.com/infobloxopen/protoc-gen-preprocess v1.0.1
 	github.com/mwitkow/go-proto-validators v0.3.2
 	github.com/pseudomuto/protoc-gen-doc v1.5.1
@@ -30,6 +30,7 @@ require (
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt/v4 v4.4.1 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.2.0 // indirect
