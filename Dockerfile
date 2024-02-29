@@ -29,7 +29,7 @@ RUN go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
 RUN go install github.com/infobloxopen/protoc-gen-preprocess
 RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-validate && dep ensure && GO111MODULE=off go install .
 RUN go install github.com/infobloxopen/protoc-gen-atlas-validate
-RUN go install github.com/infobloxopen/protoc-gen-gorm@compartment
+RUN go install github.com/infobloxopen/protoc-gen-gorm
 
 RUN mkdir -p /out/usr/bin
 
