@@ -19,7 +19,11 @@ option go_package = "github.com/infobloxopen/atlas-gentool/testdata;test";
  * Example comprises all the fields that show proper test output.
  */
 message Example {
-  option (gorm.opts).ormable = true;
+   option (gorm.opts) = {
+    ormable: true,
+    multi_account: true
+    multi_compartment: true
+  };
   string email_address = 1 [(validate.rules).string.email = true, (preprocess.field).string = {methods:[lower]}];
   string user_name = 2 [(atlas.query.validate) = {filtering: {allow: EQ}, sorting: {disable: true}}];
   google.protobuf.Struct foo_object = 3;
