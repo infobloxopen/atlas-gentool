@@ -33,21 +33,24 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/uuid v1.2.0 // indirect
+	github.com/google/uuid v1.5.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/huandu/xstrings v1.0.0 // indirect
 	github.com/iancoleman/orderedmap v0.2.0 // indirect
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/imdario/mergo v0.3.4 // indirect
+	github.com/infobloxopen/atlas-app-toolkit/v2 v2.2.1 // indirect
+	github.com/jinzhu/gorm v1.9.16 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
+	github.com/lib/pq v1.10.2 // indirect
 	github.com/lyft/protoc-gen-star v0.6.0 // indirect
 	github.com/magefile/mage v1.10.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/pseudomuto/protokit v0.2.0 // indirect
-	github.com/sirupsen/logrus v1.8.0 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190809123943-df4f5c81cb3b // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
