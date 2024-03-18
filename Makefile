@@ -2,6 +2,7 @@
 # https://github.com/infobloxopen/atlas-gentool
 IMAGE_NAME := infoblox/atlas-gentool
 
+GOFLAGS                 := ""
 GO_PATH                 := /go
 SRCROOT_ON_HOST         := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 SRCROOT_IN_CONTAINER    := $(GO_PATH)/src/github.com/infobloxopen/atlas-gentool
