@@ -30,4 +30,5 @@ import (
 	_ "github.com/infobloxopen/protoc-gen-gorm/errors"
 	_ "github.com/infobloxopen/protoc-gen-gorm/types"
 	_ "github.com/infobloxopen/protoc-gen-preprocess"
+	_ "gorm.io/gorm"
 )
