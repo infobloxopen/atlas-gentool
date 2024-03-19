@@ -1,5 +1,5 @@
 # The docker image to generate Golang code from Protol Buffer.
-FROM golang:1.17.0-alpine3.14 as builder
+FROM golang:1.19.0-alpine as builder
 LABEL intermediate=true
 MAINTAINER DL NGP-App-Infra-API <ngp-app-infra-api@infoblox.com>
 
@@ -27,7 +27,7 @@ RUN go install github.com/envoyproxy/protoc-gen-validate
 RUN go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
 RUN go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
 RUN go install github.com/infobloxopen/protoc-gen-preprocess
-RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-validate && dep ensure && GO111MODULE=off go install .
+RUN go install github.com/infobloxopen/protoc-gen-atlas-query-validate
 RUN go install github.com/infobloxopen/protoc-gen-atlas-validate
 RUN go install github.com/infobloxopen/protoc-gen-gorm
 
