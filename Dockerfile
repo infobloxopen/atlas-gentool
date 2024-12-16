@@ -94,7 +94,7 @@ RUN go get github.com/go-openapi/spec && \
 ENV GO111MODULE=on
 
 # Build with infoblox atlas_patch.
-RUN cd ${GOPATH}/src/github.com/infobloxopen && git clone --single-branch -b v1.0.1 https://github.com/infobloxopen/atlas-openapiv2-patch.git && \
+RUN cd ${GOPATH}/src/github.com/infobloxopen && git clone --single-branch -b v1.0.2 https://github.com/infobloxopen/atlas-openapiv2-patch.git && \
     cd ${GOPATH}/src/github.com/infobloxopen/atlas-openapiv2-patch && go mod vendor && go build -o /out/usr/bin/atlas_patch ./cmd/server/.
 
 RUN mkdir -p /out/protos && \
