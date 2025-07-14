@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - v22-11
   release:
 jobs:
   test:
@@ -26,7 +27,7 @@ jobs:
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build
         run: |
           make docker-build

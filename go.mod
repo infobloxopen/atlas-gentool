@@ -11,7 +11,7 @@ require (
 	github.com/infobloxopen/atlas-app-toolkit v1.2.2-0.20220721202134-28480c4993fc
 	github.com/infobloxopen/protoc-gen-atlas-query-validate v0.5.2
 	github.com/infobloxopen/protoc-gen-atlas-validate v1.0.1
-	github.com/infobloxopen/protoc-gen-gorm v1.1.3-0.20230726085533-76a99c197982
+	github.com/infobloxopen/protoc-gen-gorm v1.1.3-0.20250714071400-9648a376b530
 	github.com/infobloxopen/protoc-gen-preprocess v1.0.1
 	github.com/mwitkow/go-proto-validators v0.3.2
 	github.com/pseudomuto/protoc-gen-doc v1.5.1
@@ -39,7 +39,7 @@ require (
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/imdario/mergo v0.3.4 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.4 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/lyft/protoc-gen-star v0.6.0 // indirect
 	github.com/magefile/mage v1.10.0 // indirect
