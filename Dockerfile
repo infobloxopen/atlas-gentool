@@ -1,104 +1,111 @@
 # The docker image to generate Golang code from Protocol Buffers.
-FROM golang:1.21-alpine3.19 AS builder
+FROM golang:1.25-alpine3.21 AS builder
 LABEL intermediate=true
 
 ENV CGO_ENABLED=0
-ENV GOPATH=/go
 
 RUN apk update \
     && apk add --no-cache --purge git curl upx
 
-# Clone all dependencies into GOPATH/src (replicating the old glide layout)
-# This ensures proto files end up in the right place for protoc -I paths.
-WORKDIR ${GOPATH}/src
+# Install protoc 3.5.1 to match original v21.8 output
+ENV PROTOC_VERSION=3.5.1
+RUN curl -sL -o /tmp/protoc.zip \
+      https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip && \
+    unzip -o /tmp/protoc.zip -d /usr/local bin/protoc 'include/*' && \
+    rm /tmp/protoc.zip
 
-# Standard proto / gogo
-RUN git clone --depth 1 --branch v1.3.1  https://github.com/golang/protobuf.git           github.com/golang/protobuf && \
-    git clone --depth 1 --branch v1.0.0  https://github.com/gogo/protobuf.git              github.com/gogo/protobuf && \
-    git clone --depth 1                   https://github.com/google/protobuf.git             github.com/google/protobuf
+WORKDIR /build
 
-# grpc-gateway (upstream for protoc-gen-grpc-gateway)
-RUN git clone --depth 1 --branch v1.14.8 https://github.com/grpc-ecosystem/grpc-gateway.git github.com/grpc-ecosystem/grpc-gateway
+# Create a throwaway module for installing pinned tools
+RUN go mod init tools
 
-# googleapis
-RUN git clone --depth 1 --branch master  https://github.com/googleapis/googleapis.git       github.com/googleapis/googleapis
+# Install protoc plugins
+RUN GONOSUMCHECK='*' go install github.com/golang/protobuf/protoc-gen-go@v1.3.1
+RUN GONOSUMCHECK='*' go install github.com/gogo/protobuf/protoc-gen-combo@v1.0.0
+RUN GONOSUMCHECK='*' go install github.com/gogo/protobuf/protoc-gen-gofast@v1.0.0
+RUN GONOSUMCHECK='*' go install github.com/gogo/protobuf/protoc-gen-gogo@v1.0.0
+RUN GONOSUMCHECK='*' go install github.com/gogo/protobuf/protoc-gen-gogofast@v1.0.0
+RUN GONOSUMCHECK='*' go install github.com/gogo/protobuf/protoc-gen-gogofaster@v1.0.0
+RUN GONOSUMCHECK='*' go install github.com/gogo/protobuf/protoc-gen-gogoslick@v1.0.0
+RUN GONOSUMCHECK='*' go install github.com/gogo/protobuf/protoc-gen-gogotypes@v1.0.0
+RUN GONOSUMCHECK='*' go install github.com/gogo/protobuf/protoc-gen-gostring@v1.0.0
+# tag 1.3.5 (no v prefix, so use commit hash)
+RUN GONOSUMCHECK='*' go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema@f5fcc609186685c113253757aa83eda7ec11dd90
+RUN GONOSUMCHECK='*' go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.14.8
+RUN GONOSUMCHECK='*' go install github.com/envoyproxy/protoc-gen-validate@v0.1.0
+RUN GONOSUMCHECK='*' go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators@v0.3.2
+RUN GONOSUMCHECK='*' go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@v1.0.0
+RUN GONOSUMCHECK='*' go install github.com/infobloxopen/protoc-gen-preprocess@v0.3.3
+RUN GONOSUMCHECK='*' go install github.com/infobloxopen/protoc-gen-gorm@v0.20.3
+RUN GONOSUMCHECK='*' go install github.com/infobloxopen/protoc-gen-atlas-query-validate@v0.5.1
+RUN GONOSUMCHECK='*' go install github.com/infobloxopen/protoc-gen-atlas-validate@v0.4.2
 
-# Validators
-RUN git clone --depth 1 --branch v0.1.0  https://github.com/envoyproxy/protoc-gen-validate.git github.com/envoyproxy/protoc-gen-validate && \
-    git clone --depth 1                   https://github.com/mwitkow/go-proto-validators.git    github.com/mwitkow/go-proto-validators
-
-# Documentation generator
-RUN git clone --depth 1 --branch v1.0.0  https://github.com/pseudomuto/protoc-gen-doc.git  github.com/pseudomuto/protoc-gen-doc
-
-# JSON schema generator
-RUN git clone --depth 1                   https://github.com/chrusty/protoc-gen-jsonschema.git github.com/chrusty/protoc-gen-jsonschema
-
-# Infoblox plugins
-RUN git clone --depth 1 --branch v0.20.3 https://github.com/infobloxopen/protoc-gen-gorm.git                    github.com/infobloxopen/protoc-gen-gorm && \
-    git clone --depth 1 --branch v0.19.6 https://github.com/infobloxopen/atlas-app-toolkit.git                  github.com/infobloxopen/atlas-app-toolkit && \
-    git clone --depth 1 --branch v0.5.1  https://github.com/infobloxopen/protoc-gen-atlas-query-validate.git     github.com/infobloxopen/protoc-gen-atlas-query-validate && \
-    git clone --depth 1 --branch v0.4.1  https://github.com/infobloxopen/protoc-gen-atlas-validate.git           github.com/infobloxopen/protoc-gen-atlas-validate && \
-    git clone --depth 1 --branch v0.3.3  https://github.com/infobloxopen/protoc-gen-preprocess.git               github.com/infobloxopen/protoc-gen-preprocess
-
-# gorm / inflection (runtime deps for protoc-gen-gorm)
-RUN git clone --depth 1 --branch v1.9.1  https://github.com/jinzhu/gorm.git      github.com/jinzhu/gorm && \
-    git clone --depth 1                   https://github.com/jinzhu/inflection.git github.com/jinzhu/inflection
-
-# Misc deps needed by the above
-RUN git clone --depth 1 https://github.com/ghodss/yaml.git         github.com/ghodss/yaml && \
-    git clone --depth 1 https://github.com/go-openapi/spec.git     github.com/go-openapi/spec && \
-    git clone --depth 1 https://github.com/golang/glog.git         github.com/golang/glog
-
-# Build all protoc plugins in GOPATH mode
-ENV GO111MODULE=off
-
-RUN go install github.com/golang/protobuf/protoc-gen-go && \
-    go install github.com/gogo/protobuf/protoc-gen-combo && \
-    go install github.com/gogo/protobuf/protoc-gen-gofast && \
-    go install github.com/gogo/protobuf/protoc-gen-gogo && \
-    go install github.com/gogo/protobuf/protoc-gen-gogofast && \
-    go install github.com/gogo/protobuf/protoc-gen-gogofaster && \
-    go install github.com/gogo/protobuf/protoc-gen-gogoslick && \
-    go install github.com/gogo/protobuf/protoc-gen-gogotypes && \
-    go install github.com/gogo/protobuf/protoc-gen-gostring && \
-    go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema && \
-    go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway && \
-    go install github.com/envoyproxy/protoc-gen-validate && \
-    go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators && \
-    go install github.com/pseudomuto/protoc-gen-doc/cmd/... && \
-    go install github.com/infobloxopen/protoc-gen-preprocess && \
-    go install github.com/infobloxopen/protoc-gen-gorm
-
-# These two use dep for their own deps
-RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-validate && \
-    go install . && \
-    cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-validate && \
-    go install .
-
-# Build protoc-gen-swagger with atlas_patch fork
-RUN rm -rf ${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway && \
-    git clone --single-branch -b atlas-patch https://github.com/infobloxopen/grpc-gateway.git \
-      ${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway && \
-    cd ${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger && \
-    go build -o ${GOPATH}/bin/protoc-gen-swagger .
+# Build protoc-gen-swagger from atlas-patch fork
+RUN git clone --depth 1 --single-branch -b atlas-patch \
+      https://github.com/infobloxopen/grpc-gateway.git /tmp/grpc-gateway && \
+    cd /tmp/grpc-gateway/protoc-gen-swagger && \
+    go build -o /go/bin/protoc-gen-swagger .
 
 RUN mkdir -p /out/usr/bin && \
     install -c ${GOPATH}/bin/protoc-gen* /out/usr/bin/
 
-# Collect proto files
-RUN mkdir -p /out/go/src && \
-    find ${GOPATH}/src -name "*.proto" -exec cp --parents {} /out/ \;
+# Download modules that contain .proto files needed at runtime
+RUN GONOSUMCHECK='*' go mod download \
+      github.com/infobloxopen/atlas-app-toolkit@v0.19.6 \
+      github.com/infobloxopen/protoc-gen-gorm@v0.20.3 \
+      github.com/infobloxopen/protoc-gen-atlas-query-validate@v0.5.1 \
+      github.com/infobloxopen/protoc-gen-atlas-validate@v0.4.2 \
+      github.com/infobloxopen/protoc-gen-preprocess@v0.3.3 \
+      github.com/grpc-ecosystem/grpc-gateway@v1.14.8 \
+      github.com/envoyproxy/protoc-gen-validate@v0.1.0 \
+      github.com/mwitkow/go-proto-validators@v0.3.2 \
+      github.com/gogo/protobuf@v1.0.0 \
+      github.com/golang/protobuf@v1.3.1 \
+      google.golang.org/genproto@v0.0.0-20200526211855-cb27e3aa2013 2>/dev/null; true
+
+# googleapis (not a Go module — clone directly)
+RUN git clone --depth 1 https://github.com/googleapis/googleapis.git \
+      /tmp/googleapis
+
+# Copy .proto files from specific module versions into /go/src layout for protoc -I paths
+# We copy from exact versioned paths to avoid newer transitive deps overwriting older protos
+RUN mkdir -p /out/go/src && MOD=${GOPATH}/pkg/mod && \
+    copy_mod_protos() { \
+      src="$1"; target="$2"; \
+      find "$src" -name "*.proto" | while read f; do \
+        rel="${f#$src/}"; \
+        mkdir -p "/out/go/src/${target}/$(dirname "$rel")"; \
+        cp "$f" "/out/go/src/${target}/$rel"; \
+      done; \
+    } && \
+    copy_mod_protos "$MOD/github.com/infobloxopen/atlas-app-toolkit@v0.19.6" "github.com/infobloxopen/atlas-app-toolkit" && \
+    copy_mod_protos "$MOD/github.com/infobloxopen/protoc-gen-gorm@v0.20.3" "github.com/infobloxopen/protoc-gen-gorm" && \
+    copy_mod_protos "$MOD/github.com/infobloxopen/protoc-gen-atlas-query-validate@v0.5.1" "github.com/infobloxopen/protoc-gen-atlas-query-validate" && \
+    copy_mod_protos "$MOD/github.com/infobloxopen/protoc-gen-atlas-validate@v0.4.2" "github.com/infobloxopen/protoc-gen-atlas-validate" && \
+    copy_mod_protos "$MOD/github.com/infobloxopen/protoc-gen-preprocess@v0.3.3" "github.com/infobloxopen/protoc-gen-preprocess" && \
+    copy_mod_protos "$MOD/github.com/grpc-ecosystem/grpc-gateway@v1.14.8" "github.com/grpc-ecosystem/grpc-gateway" && \
+    copy_mod_protos "$MOD/github.com/envoyproxy/protoc-gen-validate@v0.1.0" "github.com/envoyproxy/protoc-gen-validate" && \
+    copy_mod_protos "$MOD/github.com/mwitkow/go-proto-validators@v0.3.2" "github.com/mwitkow/go-proto-validators" && \
+    copy_mod_protos "$MOD/github.com/gogo/protobuf@v1.0.0" "github.com/gogo/protobuf" && \
+    copy_mod_protos "$MOD/github.com/golang/protobuf@v1.3.1" "github.com/golang/protobuf" && \
+    copy_mod_protos "$MOD/google.golang.org/genproto@v0.0.0-20200526211855-cb27e3aa2013" "google.golang.org/genproto" && \
+    # Copy protos from the swagger fork (overrides grpc-gateway protos with atlas-patch version)
+    copy_mod_protos "/tmp/grpc-gateway" "github.com/grpc-ecosystem/grpc-gateway" && \
+    # Copy googleapis protos
+    copy_mod_protos "/tmp/googleapis" "github.com/googleapis/googleapis"
 
 RUN upx --lzma /out/usr/bin/protoc-gen-*
 
-FROM alpine:3.19
-RUN apk add --no-cache libstdc++ protobuf-dev
+FROM alpine:3.21
+RUN apk add --no-cache libstdc++
+COPY --from=builder /usr/local/bin/protoc /usr/local/bin/protoc
+COPY --from=builder /usr/local/include /usr/local/include
 COPY --from=builder /out/usr /usr
 COPY --from=builder /out/go/src /go/src
 
 WORKDIR /go/src
 
-ENTRYPOINT ["protoc", "-I.", \
+ENTRYPOINT ["/usr/local/bin/protoc", "-I.", \
     "-Igithub.com/grpc-ecosystem/grpc-gateway/third_party/googleapis", \
     "-Igithub.com/grpc-ecosystem/grpc-gateway", "-Igithub.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options", \
     "-Igithub.com/envoyproxy/protoc-gen-validate/validate", \
