@@ -2,31 +2,48 @@
 # https://github.com/infobloxopen/atlas-gentool
 IMAGE_NAME := infoblox/atlas-gentool
 
-SRCROOT_ON_HOST      := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
-SRCROOT_IN_CONTAINER := /go/src/github.com/infobloxopen/atlas-gentool
-IMAGE_VERSION        ?= $(shell git tag --points-at HEAD | sort -n -r | head -1)
+GO_PATH              	:= /go
+SRCROOT_ON_HOST      	:= $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
+SRCROOT_IN_CONTAINER  := $(GO_PATH)/src/github.com/infobloxopen/atlas-gentool
+IMAGE_VERSION	        ?= $(shell git tag --points-at HEAD | sort -n -r | head -1)
+
+get_version = sed -n 's/^$(1)=//p' plugin.version
+
+AATVersion   ?= $(shell $(call get_version,atlas-app-toolkit))
+PGGVersion   ?= $(shell $(call get_version,protoc-gen-gorm))
+PGAQVVersion ?= $(shell $(call get_version,protoc-gen-atlas-query-validate))
+PGAVVersion  ?= $(shell $(call get_version,protoc-gen-atlas-validate))
+PGPVersion   ?= $(shell $(call get_version,protoc-gen-preprocess))
 
 .PHONY: all
-all: build
+all: latest
 
-.PHONY: build
-build:
+# Create the Docker image with the latest tag.
+.PHONY: latest
+latest:
 	docker build -f Dockerfile -t $(IMAGE_NAME):latest .
 
 .PHONY: versioned
 versioned:
-	docker build -f Dockerfile -t $(IMAGE_NAME):$(IMAGE_VERSION) .
+	docker build -f Dockerfile \
+	 --build-arg AAT_VERSION=$(AATVersion) \
+	 --build-arg PGG_VERSION=$(PGGVersion) \
+	 --build-arg PGAQV_VERSION=$(PGAQVVersion) \
+	 --build-arg PGAV_VERSION=$(PGAVVersion) \
+	 --build-arg PGP_VERSION=$(PGPVersion) \
+	 -t $(IMAGE_NAME):$(IMAGE_VERSION) .
 
 .PHONY: clean
 clean:
 	docker rmi -f $(IMAGE_NAME)
+	docker rmi `docker images --filter "label=intermediate=true" -q`
 
 .PHONY: test test-gen test-check test-clean
 test: test-gen test-check test-clean
 
 test-gen:
 	docker run --rm -v $(SRCROOT_ON_HOST):$(SRCROOT_IN_CONTAINER) \
-	 $(IMAGE_NAME):latest \
+	 infoblox/atlas-gentool:$(IMAGE_VERSION) \
 	--go_out=plugins=grpc:. \
 	--grpc-gateway_out=logtostderr=true:. \
 	--validate_out="lang=go:." \
