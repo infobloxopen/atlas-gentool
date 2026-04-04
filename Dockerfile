@@ -1,111 +1,126 @@
-# The docker image to generate Golang code from Protocol Buffers.
-FROM golang:1.21-alpine3.19 AS builder
+# The docker image to generate Golang code from Protol Buffer.
+FROM golang:1.17.0-alpine3.14 as builder
 LABEL intermediate=true
+MAINTAINER DL NGP-App-Infra-API <ngp-app-infra-api@infoblox.com>
 
+ARG AAT_VERSION=master
+ARG PGG_VERSION=v0.20.4
+ARG PGAQV_VERSION=master
+ARG PGAV_VERSION=master
+ARG PGP_VERSION=master
+
+# Set up mandatory Go environmental variables.
 ENV CGO_ENABLED=0
-ENV GOPATH=/go
+ENV GO111MODULE=off
 
 RUN apk update \
     && apk add --no-cache --purge git curl upx
 
-# Clone all dependencies into GOPATH/src (replicating the old glide layout)
-# This ensures proto files end up in the right place for protoc -I paths.
-WORKDIR ${GOPATH}/src
+# The version and the binaries checksum for the glide package manager.
+ENV GLIDE_VERSION 0.12.3
+ENV GLIDE_DOWNLOAD_URL https://github.com/Masterminds/glide/releases/download/v${GLIDE_VERSION}/glide-v${GLIDE_VERSION}-linux-amd64.tar.gz
+ENV GLIDE_DOWNLOAD_SHA256 0e2be5e863464610ebc420443ccfab15cdfdf1c4ab63b5eb25d1216900a75109
 
-# Standard proto / gogo
-RUN git clone --depth 1 --branch v1.3.1  https://github.com/golang/protobuf.git           github.com/golang/protobuf && \
-    git clone --depth 1 --branch v1.0.0  https://github.com/gogo/protobuf.git              github.com/gogo/protobuf && \
-    git clone --depth 1                   https://github.com/google/protobuf.git             github.com/google/protobuf
+# Download and install the glide package manager.
+RUN curl -fsSL ${GLIDE_DOWNLOAD_URL} -o glide.tar.gz \
+    && echo "${GLIDE_DOWNLOAD_SHA256}  glide.tar.gz" | sha256sum -c - \
+    && tar -xzf glide.tar.gz --strip-components=1 -C /usr/local/bin \
+    && rm -rf glide.tar.gz
 
-# grpc-gateway (upstream for protoc-gen-grpc-gateway)
-RUN git clone --depth 1 --branch v1.14.8 https://github.com/grpc-ecosystem/grpc-gateway.git github.com/grpc-ecosystem/grpc-gateway
+# Download and install dep.
+ENV INSTALL_DIRECTORY /usr/local/bin
+RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 
-# googleapis
-RUN git clone --depth 1 --branch master  https://github.com/googleapis/googleapis.git       github.com/googleapis/googleapis
+# Install as the protoc plugins as build-time dependecies.
+COPY glide.yaml.tmpl .
 
-# Validators
-RUN git clone --depth 1 --branch v0.1.0  https://github.com/envoyproxy/protoc-gen-validate.git github.com/envoyproxy/protoc-gen-validate && \
-    git clone --depth 1                   https://github.com/mwitkow/go-proto-validators.git    github.com/mwitkow/go-proto-validators
+# glide is unable to resolve correctly these deps requiring
+# to import all the dependencies in ghodss/yaml
+RUN go get github.com/ghodss/yaml
 
-# Documentation generator
-RUN git clone --depth 1 --branch v1.0.0  https://github.com/pseudomuto/protoc-gen-doc.git  github.com/pseudomuto/protoc-gen-doc
+# Compile binaries for the protocol buffer plugins. We need specific
+# versions of these tools, this is why we at first step install glide,
+# download required versions and then installing them.
+RUN sed -e "s/@AATVersion/$AAT_VERSION/" \
+        -e "s/@PGGVersion/$PGG_VERSION/" \
+        -e "s/@PGAQVVersion/$PGAQV_VERSION/" \
+        -e "s/@PGAVVersion/$PGAV_VERSION/" \
+        -e "s/@PGPVersion/$PGP_VERSION/" \
+        glide.yaml.tmpl > glide.yaml
+RUN glide up --skip-test
+RUN cp -r vendor/* ${GOPATH}/src/
 
-# JSON schema generator
-RUN git clone --depth 1                   https://github.com/chrusty/protoc-gen-jsonschema.git github.com/chrusty/protoc-gen-jsonschema
+RUN go install github.com/golang/protobuf/protoc-gen-go
+RUN go install github.com/gogo/protobuf/protoc-gen-combo
+RUN go install github.com/gogo/protobuf/protoc-gen-gofast
+RUN go install github.com/gogo/protobuf/protoc-gen-gogo
+RUN go install github.com/gogo/protobuf/protoc-gen-gogofast
+RUN go install github.com/gogo/protobuf/protoc-gen-gogofaster
+RUN go install github.com/gogo/protobuf/protoc-gen-gogoslick
+RUN go install github.com/gogo/protobuf/protoc-gen-gogotypes
+RUN go install github.com/gogo/protobuf/protoc-gen-gostring
+RUN go get github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
+RUN go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
+RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+RUN go install github.com/envoyproxy/protoc-gen-validate
+RUN go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
+RUN go install github.com/pseudomuto/protoc-gen-doc/cmd/...
+RUN go install github.com/infobloxopen/protoc-gen-preprocess
+RUN go install  \
+      -ldflags "-X github.com/infobloxopen/protoc-gen-gorm/plugin.ProtocGenGormVersion=$PGG_VERSION -X github.com/infobloxopen/protoc-gen-gorm/plugin.AtlasAppToolkitVersion=$AAT_VERSION" \
+      github.com/infobloxopen/protoc-gen-gorm
+# Download all dependencies of protoc-gen-atlas-query-validate
+RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-validate && dep ensure -vendor-only
+RUN go install github.com/infobloxopen/protoc-gen-atlas-query-validate
 
-# Infoblox plugins
-RUN git clone --depth 1 --branch v0.20.3 https://github.com/infobloxopen/protoc-gen-gorm.git                    github.com/infobloxopen/protoc-gen-gorm && \
-    git clone --depth 1 --branch v0.19.6 https://github.com/infobloxopen/atlas-app-toolkit.git                  github.com/infobloxopen/atlas-app-toolkit && \
-    git clone --depth 1 --branch v0.5.1  https://github.com/infobloxopen/protoc-gen-atlas-query-validate.git     github.com/infobloxopen/protoc-gen-atlas-query-validate && \
-    git clone --depth 1 --branch v0.4.1  https://github.com/infobloxopen/protoc-gen-atlas-validate.git           github.com/infobloxopen/protoc-gen-atlas-validate && \
-    git clone --depth 1 --branch v0.3.3  https://github.com/infobloxopen/protoc-gen-preprocess.git               github.com/infobloxopen/protoc-gen-preprocess
+# Download all dependencies of protoc-gen-atlas-validate
+RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-validate && dep ensure -vendor-only
+RUN go install github.com/infobloxopen/protoc-gen-atlas-validate
 
-# gorm / inflection (runtime deps for protoc-gen-gorm)
-RUN git clone --depth 1 --branch v1.9.1  https://github.com/jinzhu/gorm.git      github.com/jinzhu/gorm && \
-    git clone --depth 1                   https://github.com/jinzhu/inflection.git github.com/jinzhu/inflection
+RUN mkdir -p /out/usr/bin
 
-# Misc deps needed by the above
-RUN git clone --depth 1 https://github.com/ghodss/yaml.git         github.com/ghodss/yaml && \
-    git clone --depth 1 https://github.com/go-openapi/spec.git     github.com/go-openapi/spec && \
-    git clone --depth 1 https://github.com/golang/glog.git         github.com/golang/glog
+RUN rm -rf vendor/* ${GOPATH}/pkg/* \
+    && install -c ${GOPATH}/bin/protoc-gen* /out/usr/bin/
 
-# Build all protoc plugins in GOPATH mode
-ENV GO111MODULE=off
+# build protoc-gen-swagger separately with atlas_patch
+RUN go get github.com/go-openapi/spec && \
+	rm -rf ${GOPATH}/src/github.com/grpc-ecosystem/ \
+	&& mkdir -p ${GOPATH}/src/github.com/grpc-ecosystem/ && \
+	cd ${GOPATH}/src/github.com/grpc-ecosystem && \
+	git clone --single-branch -b atlas-patch https://github.com/infobloxopen/grpc-gateway.git && \
+	cd grpc-gateway/protoc-gen-swagger && go build -o /out/usr/bin/protoc-gen-swagger main.go
 
-RUN go install github.com/golang/protobuf/protoc-gen-go && \
-    go install github.com/gogo/protobuf/protoc-gen-combo && \
-    go install github.com/gogo/protobuf/protoc-gen-gofast && \
-    go install github.com/gogo/protobuf/protoc-gen-gogo && \
-    go install github.com/gogo/protobuf/protoc-gen-gogofast && \
-    go install github.com/gogo/protobuf/protoc-gen-gogofaster && \
-    go install github.com/gogo/protobuf/protoc-gen-gogoslick && \
-    go install github.com/gogo/protobuf/protoc-gen-gogotypes && \
-    go install github.com/gogo/protobuf/protoc-gen-gostring && \
-    go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema && \
-    go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway && \
-    go install github.com/envoyproxy/protoc-gen-validate && \
-    go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators && \
-    go install github.com/pseudomuto/protoc-gen-doc/cmd/... && \
-    go install github.com/infobloxopen/protoc-gen-preprocess && \
-    go install github.com/infobloxopen/protoc-gen-gorm
+RUN mkdir -p /out/protos && \
+    find ${GOPATH}/src -name "*.proto" -exec cp --parents {} /out/protos \;
 
-# These two use dep for their own deps
-RUN cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-query-validate && \
-    go install . && \
-    cd ${GOPATH}/src/github.com/infobloxopen/protoc-gen-atlas-validate && \
-    go install .
+RUN upx --lzma \
+        /out/usr/bin/protoc-gen-*
 
-# Build protoc-gen-swagger with atlas_patch fork
-RUN rm -rf ${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway && \
-    git clone --single-branch -b atlas-patch https://github.com/infobloxopen/grpc-gateway.git \
-      ${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway && \
-    cd ${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger && \
-    go build -o ${GOPATH}/bin/protoc-gen-swagger .
-
-RUN mkdir -p /out/usr/bin && \
-    install -c ${GOPATH}/bin/protoc-gen* /out/usr/bin/
-
-# Collect proto files
-RUN mkdir -p /out/go/src && \
-    find ${GOPATH}/src -name "*.proto" -exec cp --parents {} /out/ \;
-
-RUN upx --lzma /out/usr/bin/protoc-gen-*
-
-FROM alpine:3.19
+FROM alpine:3.8
 RUN apk add --no-cache libstdc++ protobuf-dev
 COPY --from=builder /out/usr /usr
-COPY --from=builder /out/go/src /go/src
+COPY --from=builder /out/protos /
 
 WORKDIR /go/src
 
+# protoc as an entry point for all plugins with import paths set
 ENTRYPOINT ["protoc", "-I.", \
+    # required import paths for protoc-gen-grpc-gateway plugin
     "-Igithub.com/grpc-ecosystem/grpc-gateway/third_party/googleapis", \
+    # required import paths for protoc-gen-swagger plugin
     "-Igithub.com/grpc-ecosystem/grpc-gateway", "-Igithub.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options", \
+    # required import paths for protoc-gen-validate plugin
     "-Igithub.com/envoyproxy/protoc-gen-validate/validate", \
+    # required import paths for go-proto-validators plugin
     "-Igithub.com/mwitkow/go-proto-validators", \
+    # googleapis proto files
     "-Igithub.com/googleapis/googleapis", \
+    # required import paths for protoc-gen-gorm plugin
     "-Igithub.com/infobloxopen/protoc-gen-gorm", \
+    # required import paths for protoc-gen-atlas-query-validate plugin
     "-Igithub.com/infobloxopen/protoc-gen-atlas-query-validate", \
+    # required import paths for protoc-gen-preprocess plugin
     "-Igithub.com/infobloxopen/protoc-gen-preprocess", \
+    # required import paths for protoc-gen-atlas-validate plugin
     "-Igithub.com/infobloxopen/protoc-gen-atlas-validate" \
 ]
