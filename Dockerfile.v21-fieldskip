@@ -1,0 +1,14 @@
+FROM golang:1.14-alpine AS builder
+
+RUN apk add --no-cache git
+WORKDIR /src
+COPY patches/swagger-fieldskip.patch /tmp/swagger-fieldskip.patch
+
+RUN git clone --single-branch --branch atlas-patch https://github.com/infobloxopen/grpc-gateway.git && \
+    cd grpc-gateway && \
+    git apply /tmp/swagger-fieldskip.patch && \
+    cd protoc-gen-swagger && \
+    go build -o /out/protoc-gen-swagger main.go
+
+FROM infoblox/atlas-gentool:v21.3
+COPY --from=builder /out/protoc-gen-swagger /usr/bin/protoc-gen-swagger

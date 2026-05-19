@@ -1,0 +1,161 @@
+diff --git a/protoc-gen-grpc-gateway/descriptor/registry.go b/protoc-gen-grpc-gateway/descriptor/registry.go
+index 79b2c09..287f60b 100644
+--- a/protoc-gen-grpc-gateway/descriptor/registry.go
++++ b/protoc-gen-grpc-gateway/descriptor/registry.go
+@@ -55,6 +55,9 @@ type Registry struct {
+ 
+ 	// withCustomAnnotations this flag provide you possibility to use custom annotations
+ 	withCustomAnnotations bool
++
++	// enableFieldSkipAnnotation if true, excludes fields marked with @openapi_skip in swagger output
++	enableFieldSkipAnnotation bool
+ }
+ 
+ // NewRegistry returns a new Registry.
+@@ -348,6 +351,16 @@ func (r *Registry) SetWithPrivateOperations(withPrivateOperations bool) {
+ 	r.withPrivateOperations = withPrivateOperations
+ }
+ 
++// IsEnableFieldSkipAnnotation whether @openapi_skip marker-based field exclusion is enabled.
++func (r *Registry) IsEnableFieldSkipAnnotation() bool {
++	return r.enableFieldSkipAnnotation
++}
++
++// SetEnableFieldSkipAnnotation if true excludes fields marked with @openapi_skip from swagger output.
++func (r *Registry) SetEnableFieldSkipAnnotation(enable bool) {
++	r.enableFieldSkipAnnotation = enable
++}
++
+ // SetMergeFileName controls the target swagger file name out of multiple protos
+ func (r *Registry) SetMergeFileName(mergeFileName string) {
+ 	r.mergeFileName = mergeFileName
+diff --git a/protoc-gen-swagger/genswagger/atlas_patch.go b/protoc-gen-swagger/genswagger/atlas_patch.go
+index 815b5f9..03f5358 100644
+--- a/protoc-gen-swagger/genswagger/atlas_patch.go
++++ b/protoc-gen-swagger/genswagger/atlas_patch.go
+@@ -25,6 +25,7 @@ import (
+ const (
+ 	titleAnnotation   = "@title"
+ 	exampleAnnotation = "@example"
++	fieldSkipMarker   = "@openapi_skip"
+ )
+ 
+ var (
+@@ -45,12 +46,16 @@ func filterPathVars(path string, params []spec.Parameter) []spec.Parameter {
+ 	return newParams
+ }
+ 
+-func atlasSwagger(b []byte, withPrivateMethods, withCustomAnnotations bool) string {
++func atlasSwagger(b []byte, withPrivateMethods, withCustomAnnotations, enableFieldSkipAnnotation bool) string {
+ 	if err := json.Unmarshal(b, &sw); err != nil {
+ 		fmt.Fprintf(os.Stderr, "error parsing JSON: %v\n", err)
+ 		os.Exit(1)
+ 	}
+ 
++	if enableFieldSkipAnnotation {
++		applyFieldSkipAnnotation()
++	}
++
+ 	// remove params that are not part of path
+ 	for path, item := range sw.Paths.Paths {
+ 		if item.Get != nil {
+@@ -355,6 +360,57 @@ The service-defined string used to identify a page of resources. A null value in
+ 	return fmt.Sprintf("%s", bOut)
+ }
+ 
++func applyFieldSkipAnnotation() {
++	for _, item := range sw.Paths.Paths {
++		for _, op := range pathItemAsMap(item) {
++			if op == nil {
++				continue
++			}
++			var kept []spec.Parameter
++			for _, param := range op.Parameters {
++				if fieldSkipAnnotated(param.Description) {
++					continue
++				}
++				kept = append(kept, param)
++			}
++			op.Parameters = kept
++		}
++	}
++
++	for defName, def := range sw.Definitions {
++		if len(def.Properties) == 0 {
++			continue
++		}
++
++		for propName, prop := range def.Properties {
++			if fieldSkipAnnotated(prop.Description, prop.Title) {
++				delete(def.Properties, propName)
++			}
++		}
++
++		if len(def.Required) > 0 {
++			var req []string
++			for _, fieldName := range def.Required {
++				if _, exists := def.Properties[fieldName]; exists {
++					req = append(req, fieldName)
++				}
++			}
++			def.Required = req
++		}
++
++		sw.Definitions[defName] = def
++	}
++}
++
++func fieldSkipAnnotated(values ...string) bool {
++	for _, value := range values {
++		if strings.Contains(value, fieldSkipMarker) {
++			return true
++		}
++	}
++	return false
++}
++
+ func getPropRef(p spec.Schema) spec.Ref {
+ 	if len(p.Type) == 1 && p.Type[0] == "array" {
+ 		return p.Items.Schema.Ref
+diff --git a/protoc-gen-swagger/genswagger/generator.go b/protoc-gen-swagger/genswagger/generator.go
+index 0b8a64d..8ef64a5 100644
+--- a/protoc-gen-swagger/genswagger/generator.go
++++ b/protoc-gen-swagger/genswagger/generator.go
+@@ -122,7 +122,7 @@ func (g *generator) Generate(targets []*descriptor.File) ([]*plugin.CodeGenerato
+ 		targetSwagger := mergeTargetFile(swaggers, g.reg.GetMergeFileName())
+ 		resFile := encodeSwagger(targetSwagger)
+ 		if g.reg.IsAtlasPatch() {
+-			resFile.Content = proto.String(atlasSwagger([]byte(*resFile.Content), g.reg.IsWithPrivateOperations(), g.reg.IsWithCustomAnnotations()))
++			resFile.Content = proto.String(atlasSwagger([]byte(*resFile.Content), g.reg.IsWithPrivateOperations(), g.reg.IsWithCustomAnnotations(), g.reg.IsEnableFieldSkipAnnotation()))
+ 			if g.reg.IsWithPrivateOperations() {
+ 				privateFileName := strings.Replace(resFile.GetName(), ".swagger.json", ".private.swagger.json", -1)
+ 				resFile.Name = &privateFileName
+@@ -135,7 +135,7 @@ func (g *generator) Generate(targets []*descriptor.File) ([]*plugin.CodeGenerato
+ 			resFile := encodeSwagger(file)
+ 			fileContent := []byte(*resFile.Content)
+ 			if g.reg.IsAtlasPatch() {
+-				resFile.Content = proto.String(atlasSwagger(fileContent, g.reg.IsWithPrivateOperations(), g.reg.IsWithCustomAnnotations()))
++				resFile.Content = proto.String(atlasSwagger(fileContent, g.reg.IsWithPrivateOperations(), g.reg.IsWithCustomAnnotations(), g.reg.IsEnableFieldSkipAnnotation()))
+ 				if g.reg.IsWithPrivateOperations() {
+ 					privateFileName := strings.Replace(resFile.GetName(), ".swagger.json", ".private.swagger.json", -1)
+ 					resFile.Name = &privateFileName
+diff --git a/protoc-gen-swagger/main.go b/protoc-gen-swagger/main.go
+index 93a9d57..0626a87 100644
+--- a/protoc-gen-swagger/main.go
++++ b/protoc-gen-swagger/main.go
+@@ -24,6 +24,7 @@ var (
+ 	atlasPatch            = flag.Bool("atlas_patch", false, "if set, generation will be proceded with atlas-patch changes")
+ 	withPrivate           = flag.Bool("with_private", false, "if unset, generate swagger schema without operations 0 as 'private' work only if atlas_patch set")
+ 	withCustomAnnotations = flag.Bool("with_custom_annotations", false, "if set, you became available to use custom annotations")
++	enableFieldSkip       = flag.Bool("enable_field_skip_annotation", false, "if set, fields marked with @openapi_skip in description are excluded from generated swagger")
+ )
+ 
+ func main() {
+@@ -61,6 +62,7 @@ func main() {
+ 	reg.SetAtlasPatch(*atlasPatch)
+ 	reg.SetWithPrivateOperations(*withPrivate)
+ 	reg.SetWithCustomAnnotations(*withCustomAnnotations)
++	reg.SetEnableFieldSkipAnnotation(*enableFieldSkip)
+ 	reg.SetMergeFileName(*mergeFileName)
+ 	for k, v := range pkgMap {
+ 		reg.AddPkgMap(k, v)
